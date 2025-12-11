@@ -107,6 +107,8 @@ Positive Variables
 
     q(c,d,r,t) flot dans la pompe k ou entrant ds le reservoir r en m3.h^-1
 
+    cost      cout total electricite en euro
+
     v(r,t) volume d eau dans le reservoir r en m3;
 
 v.lo(r,t) = vmin(r);
@@ -117,6 +119,14 @@ v.up(r,t) = vmax(r);
 Equations
 
     obj         objectif cout total electricite
+    limites_debit(n,t)       limites de debit dans les tuyaux
+    conservation_debit(n,t)      conservation des debits aux noeuds
+    offre_demande(r,t)       equilibre offre demande dans les reservoirs
+    puissance_pompe(c,d,t)         puissance electrique de chaque pompe;
+
+obj.. cost =e= sum((c,d,t), tariff(t) * ( gamma(c,0) * sum(r, q(c,d,r,t)) + gamma(c,1) * sqr(sum(r, q(c,d,r,t))) ) * x(c,d,t) );
+
+
     
 
     
