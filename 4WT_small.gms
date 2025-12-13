@@ -44,6 +44,8 @@ Scalar
      height0      reference height at the source (m)      / 0 /
      tariffnight  electricity hourly tariff at night (euro.kWh^-1)  / 0.02916 /
      tariffday    electricity hourly tariff at day (euro.kWh^-1)    / 0.04609 /
+     Qmin   debit min /1/
+     Qmax    debit max  /25/
 
 Parameter tariff(t)   electricity tariff;
     tariff(t)        = tariffday;
@@ -98,68 +100,50 @@ Table phi(n,n,degree) quadratic fit of the pressure loss (m) on the flow (m^3.h^
 
 *Variables, equations, model, solve
 
-Binary Variable
 
-    x(c,d,t) etat pompe;
-    
+Variables 
 
-Positive Variables 
-
-    q(c,d,r,t) flot dans la pompe k ou entrant ds le reservoir r en m3.h^-1
-
+    q_pompe(c,d,t) débit dans la pompe k en m3.h^-1
+    q_pipe(n,np,t) débit dans le tuyau n-np en m3.h^-1
+    x(c,d,t)    etat pompe
     cost      cout total electricite en euro
-
     v(r,t) volume d eau dans le reservoir r en m3;
 
 v.lo(r,t) = vmin(r);
 v.up(r,t) = vmax(r);
 
+Binary Variable x;
+Positive Variables q_pompe, q_pipe;
+*cost est la focntion obj, donc on la declare pas positive
 
 
 Equations
 
     obj         objectif cout total electricite
-    limites_debit(n,t)       limites de debit dans les tuyaux
-    conservation_debit(n,t)      conservation des debits aux noeuds
+    limites_debit_sup(c,d,t)       limite supp de debit dans les pompes
+    limites_debit_inf(c,d,t)       limite inf de debit dans les pompes
+    conservation_debit(j,t)      conservation des debits aux noeuds
     offre_demande(r,t)       equilibre offre demande dans les reservoirs
-    puissance_pompe(c,d,t)         puissance electrique de chaque pompe;
 
-obj.. cost =e= sum((c,d,t), tariff(t) * ( gamma(c,0) * sum(r, q(c,d,r,t)) + gamma(c,1) * sqr(sum(r, q(c,d,r,t))) ) * x(c,d,t) );
+    source(t)   cf erreur plus bas;
 
+obj.. cost =e= sum((c,d,t), tariff(t)*(gamma(c,'0')*x(c,d,t)+gamma(c,'1')*q_pompe(c,d,t)));
+limites_debit_sup(c,d,t).. q_pompe(c,d,t) =l= Qmax*x(c,d,t);
+limites_debit_inf(c,d,t).. q_pompe(c,d,t) =g= Qmin*x(c,d,t);
+conservation_debit(j,t).. sum(np$(l(j,np)), q_pipe(j,np,t)) - sum(np$(l(np,j)), q_pipe(np,j,t)) =e= 0;
+* n,t seulement car il y a nxt contraintes ? dc on somme sur les np
+* en fait non pas sur tous les n ? pluitot pour chaque jonciton j
+offre_demande(r,t).. sum(n$l(n,r),q_pipe(n,r,t)) + v(r,t-1) + vinit(r)$(ord(t)=1) =e= v(r,t) + demand(r,t) ;
 
-    
-
-    
-
-
-
-
-
-
-
-
-
+*erreur: toutes le spompes tournent à 0 et il y a du débit dans les tuyaux, il faut faire en sorte que les pompes  fournissent le débit
+*mais les pompes sont au début du système uniquement, à côté de la source
+* quel intérêt d'avoir plusieurs pompes alors ? et on en a 2 ou 3 ?
+source(t).. sum((c,d), q_pompe(c,d,t) ) =e= sum(n$l("s",n), q_pipe("s",n,t));
 
 
+model pompe / all /;
+solve pompe using minlp minimizing cost;
 
+display cost.l, x.l, q_pompe.l, q_pipe.l, v.l;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+*modifier pour passer sur les groupes des trucs et pas c,d ... et debeug

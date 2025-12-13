@@ -1,4 +1,4 @@
-GAMS 47.5.0  d6b95593 Aug 29, 2024          WEX-WEI x86 64bit/MS Windows - 12/11/25 18:41:56 Page 1
+GAMS 47.5.0  d6b95593 Aug 29, 2024          WEX-WEI x86 64bit/MS Windows - 12/12/25 14:41:48 Page 1
 Pump scheduling smallest
 C o m p i l a t i o n
 
@@ -46,115 +46,111 @@ C o m p i l a t i o n
   44       height0      reference height at the source (m)      / 0 /
   45       tariffnight  electricity hourly tariff at night (euro.kWh^-1)  / 0.02916 /
   46       tariffday    electricity hourly tariff at day (euro.kWh^-1)    / 0.04609 /
-  47   
-  48  Parameter tariff(t)   electricity tariff;
-  49      tariff(t)        = tariffday;
-  50      tariff(night(t)) = tariffnight;
-  51   
-  52  display tariff;
-  53  *overwrite le tarrif day pour t1-4
-  54   
-  55  Parameters
-  56      height(n)   elevation at each node relative to s (m)
-  57                  / s 0, j1 30, j2 30, r1 50, r2 50, r3 45, r4 35 /
-  58  *display height; marche pas ici
-  59      surface(r)  mean surface of each reservoir (m^2)
-  60                  / r1 80, r2 80, r3 80, r4 80 /
-  61   
-  62      vmin(r)     minimal volume of each reservoir (m^3)
-  63                  / r1 100, r2 100, r3 100, r4 100 /
-  64  *en utilisant les indices un par un
-  65   
-  66      vmax(r)     maximal volume of each reservoir (m^3)
-  67                  / r1 300, r2 300, r3 300, r4 300 /
-  68   
-  69  display height;
+  47       Qmin   debit min /1/
+  48       Qmax    debit max  /1000/
+  49   
+  50  Parameter tariff(t)   electricity tariff;
+  51      tariff(t)        = tariffday;
+  52      tariff(night(t)) = tariffnight;
+  53   
+  54  display tariff;
+  55  *overwrite le tarrif day pour t1-4
+  56   
+  57  Parameters
+  58      height(n)   elevation at each node relative to s (m)
+  59                  / s 0, j1 30, j2 30, r1 50, r2 50, r3 45, r4 35 /
+  60  *display height; marche pas ici
+  61      surface(r)  mean surface of each reservoir (m^2)
+  62                  / r1 80, r2 80, r3 80, r4 80 /
+  63   
+  64      vmin(r)     minimal volume of each reservoir (m^3)
+  65                  / r1 100, r2 100, r3 100, r4 100 /
+  66  *en utilisant les indices un par un
+  67   
+  68      vmax(r)     maximal volume of each reservoir (m^3)
+  69                  / r1 300, r2 300, r3 300, r4 300 /
   70   
-  71  Parameter vinit(r) initial volume of each reservoir;
-  72      vinit(r) = vmin(r);
-  73   
-  74  * a polynomial is represented as the list of coefficients for each term degree
-  75  Table psi(c,degree) quadratic fit of the service pressure (m) on the flow (m^3.h^-1) for each class of pumps
-  76                    0              1            2
-  77        small       63.0796        0            -0.0064085;
-  78   
-  79  Table gamma(c,degree) linear fit of the electrical power (kW) on the flow (m^3.h^-1) for each class of pumps
-  80                    0              1
-  81        small       3.81101     0.09627;
-  82   
-  83  Table demand(r,t) demand in water at each reservoir each hour (m^3)
-  84       t1     t2    t3    t4     t5     t6    t7      t8      t9
-  85  r1   9.83   5.0   3.67  6.5    5.67   7.5   3.0     3.0     2.0
-  86  r2   44.83  18.0  0.0   0.0    0.0    0.0   0.0     45.0    51.67
-  87  r3   14.0   13.33 25.5  11.0   10.0   10.0  11.0    10.33   30.17
-  88  r4   1.0    1.0   8.5   9.5    4.0    2.33  0.0     1.0     0.83
-  89   
-  90  Table phi(n,n,degree) quadratic fit of the pressure loss (m) on the flow (m^3.h^-1) for each pipe
-  91                  2               1
-  92       s.j1       0.00005425      0.00038190
-  93       j1.j2      0.00027996      0.00149576
-  94       j1.r1      0.00089535      0.00340436
-  95       j1.r4      0.00044768      0.00170218
-  96       j2.r2      0.00223839      0.00851091
-  97       j2.r3      0.00134303      0.00510655;
-  98   
-  99  *Variables, equations, model, solve
+  71  display height;
+  72   
+  73  Parameter vinit(r) initial volume of each reservoir;
+  74      vinit(r) = vmin(r);
+  75   
+  76  * a polynomial is represented as the list of coefficients for each term degree
+  77  Table psi(c,degree) quadratic fit of the service pressure (m) on the flow (m^3.h^-1) for each class of pumps
+  78                    0              1            2
+  79        small       63.0796        0            -0.0064085;
+  80   
+  81  Table gamma(c,degree) linear fit of the electrical power (kW) on the flow (m^3.h^-1) for each class of pumps
+  82                    0              1
+  83        small       3.81101     0.09627;
+  84   
+  85  Table demand(r,t) demand in water at each reservoir each hour (m^3)
+  86       t1     t2    t3    t4     t5     t6    t7      t8      t9
+  87  r1   9.83   5.0   3.67  6.5    5.67   7.5   3.0     3.0     2.0
+  88  r2   44.83  18.0  0.0   0.0    0.0    0.0   0.0     45.0    51.67
+  89  r3   14.0   13.33 25.5  11.0   10.0   10.0  11.0    10.33   30.17
+  90  r4   1.0    1.0   8.5   9.5    4.0    2.33  0.0     1.0     0.83
+  91   
+  92  Table phi(n,n,degree) quadratic fit of the pressure loss (m) on the flow (m^3.h^-1) for each pipe
+  93                  2               1
+  94       s.j1       0.00005425      0.00038190
+  95       j1.j2      0.00027996      0.00149576
+  96       j1.r1      0.00089535      0.00340436
+  97       j1.r4      0.00044768      0.00170218
+  98       j2.r2      0.00223839      0.00851091
+  99       j2.r3      0.00134303      0.00510655;
  100   
- 101  Binary Variable
+ 101  *Variables, equations, model, solve
  102   
- 103      x(c,d,t) etat pompe;
- 104   
+ 103   
+ 104  Variables
  105   
- 106  Positive Variables
- 107   
- 108      q(c,d,r,t) flot dans la pompe k ou entrant ds le reservoir r en m3.h^-1
- 109   
+ 106      q_pompe(c,d,t) débit dans la pompe k en m3.h^-1
+ 107      q_pipe(n,np,t) débit dans le tuyau n-np en m3.h^-1
+ 108      x(c,d,t)    etat pompe
+ 109      cost      cout total electricite en euro
  110      v(r,t) volume d eau dans le reservoir r en m3;
  111   
  112  v.lo(r,t) = vmin(r);
  113  v.up(r,t) = vmax(r);
  114   
- 115   
- 116   
- 117   
+ 115  Binary Variable x;
+ 116  Positive Variables q_pompe, q_pipe;
+ 117  *cost est la focntion obj, donc on la declare pas positive
  118   
  119   
- 120   
+ 120  Equations
  121   
- 122   
- 123   
- 124   
- 125   
- 126   
+ 122      obj         objectif cout total electricite
+ 123      limites_debit_sup(c,d,t)       limite supp de debit dans les pompes
+ 124      limites_debit_inf(c,d,t)       limite inf de debit dans les pompes
+ 125      conservation_debit(j,t)      conservation des debits aux noeuds
+ 126      offre_demande(r,t)       equilibre offre demande dans les reservoirs
  127   
- 128   
+ 128      source(t)   cf erreur plus bas;
  129   
- 130   
- 131   
- 132   
- 133   
- 134   
- 135   
- 136   
+ 130  obj.. cost =e= sum((c,d,t), tariff(t)*(gamma(c,'0')*x(c,d,t)+gamma(c,'1')*q_pompe(c,d,t)));
+ 131  limites_debit_sup(c,d,t).. q_pompe(c,d,t) =l= Qmax*x(c,d,t);
+ 132  limites_debit_inf(c,d,t).. q_pompe(c,d,t) =g= Qmin*x(c,d,t);
+ 133  conservation_debit(j,t).. sum(np$(l(j,np)), q_pipe(j,np,t)) - sum(np$(l(np,j)), q_pipe(np,j,t)) =e= 0;
+ 134  * n,t seulement car il y a nxt contraintes ? dc on somme sur les np
+ 135  * en fait non pas sur tous les n ? pluitot pour chaque jonciton j
+ 136  offre_demande(r,t).. sum(n$l(n,r),q_pipe(n,r,t)) + v(r,t) =e= v(r,t-1) + demand(r,t) + vinit(r)$(ord(t)=1);
  137   
- 138   
- 139   
- 140   
- 141   
+ 138  *erreur: toutes le spompes tournent à 0 et il y a du débit dans les tuyaux, il faut faire en sorte que les pompes  fournissent le débit
+ 139  *mais les pompes sont au début du système uniquement, à côté de la source
+ 140  * quel intérêt d'avoir plusieurs pompes alors ? et on en a 2 ou 3 ?
+ 141  source(t).. sum((c,d), q_pompe(c,d,t) ) =e= sum(j$l('s',j),q_pipe("s",j,t));
  142   
  143   
- 144   
- 145   
+ 144  model pompe / all /;
+ 145  solve pompe using minlp minimizing cost;
  146   
- 147   
- 148   
- 149   
- 150   
- 151   
+ 147  display cost.l, x.l, q_pompe.l, q_pipe.l, v.l;
 
 
 COMPILATION TIME     =        0.000 SECONDS      3 MB  47.5.0 d6b95593 WEX-WEI
-GAMS 47.5.0  d6b95593 Aug 29, 2024          WEX-WEI x86 64bit/MS Windows - 12/11/25 18:41:56 Page 2
+GAMS 47.5.0  d6b95593 Aug 29, 2024          WEX-WEI x86 64bit/MS Windows - 12/12/25 14:41:48 Page 2
 Pump scheduling smallest
 E x e c u t i o n
 
@@ -185,15 +181,616 @@ small         YES         YES         YES
 t1,    t2,    t3,    t4
 
 
-----     52 PARAMETER tariff  electricity tariff
+----     54 PARAMETER tariff  electricity tariff
 
 t1 0.029,    t2 0.029,    t3 0.029,    t4 0.029,    t5 0.046,    t6 0.046,    t7 0.046,    t8 0.046,    t9 0.046
 
 
-----     69 PARAMETER height  elevation at each node relative to s (m)
+----     71 PARAMETER height  elevation at each node relative to s (m)
 
 j1 30.000,    j2 30.000,    r1 50.000,    r2 50.000,    r3 45.000,    r4 35.000
 
+GAMS 47.5.0  d6b95593 Aug 29, 2024          WEX-WEI x86 64bit/MS Windows - 12/12/25 14:41:48 Page 3
+Pump scheduling smallest
+Equation Listing    SOLVE pompe Using MINLP From line 145
+
+
+---- obj  =E=  objectif cout total electricite
+
+obj..  - 0.0028072332*q_pompe(small,p1,t1) - 0.0028072332*q_pompe(small,p1,t2) - 0.0028072332*q_pompe(small,p1,t3) - 0.0028072332*q_pompe(small,p1,t4) - 0.0044370843*q_pompe(small,p1,t5) - 0.0044370843*q_pompe(small,p1,t6) - 0.0044370843*q_pompe(small,p1,t7) - 0.0044370843*q_pompe(small,p1,t8) - 0.0044370843*q_pompe(small,p1,t9) - 0.0028072332*q_pompe(small,p2,t1) - 0.0028072332*q_pompe(small,p2,t2) - 0.0028072332*q_pompe(small,p2,t3) - 0.0028072332*q_pompe(small,p2,t4) - 0.0044370843*q_pompe(small,p2,t5) - 0.0044370843*q_pompe(small,p2,t6) - 0.0044370843*q_pompe(small,p2,t7) - 0.0044370843*q_pompe(small,p2,t8) - 0.0044370843*q_pompe(small,p2,t9) - 0.0028072332*q_pompe(small,p3,t1) - 0.0028072332*q_pompe(small,p3,t2) - 0.0028072332*q_pompe(small,p3,t3) - 0.0028072332*q_pompe(small,p3,t4) - 0.0044370843*q_pompe(small,p3,t5) - 0.0044370843*q_pompe(small,p3,t6) - 0.0044370843*q_pompe(small,p3,t7) - 0.0044370843*q_pompe(small,p3,t8) - 0.0044370843*q_pompe(small,p3,t9) - 0.1111290516*x(small,p1,t1) - 0.1111290516*x(small,p1,t2) - 0.1111290516*x(small,p1,t3) - 0.1111290516*x(small,p1,t4) - 0.1756494509*x(small,p1,t5) - 0.1756494509*x(small,p1,t6) - 0.1756494509*x(small,p1,t7) - 0.1756494509*x(small,p1,t8) - 0.1756494509*x(small,p1,t9) - 0.1111290516*x(small,p2,t1) - 0.1111290516*x(small,p2,t2) - 0.1111290516*x(small,p2,t3) - 0.1111290516*x(small,p2,t4) - 0.1756494509*x(small,p2,t5) - 0.1756494509*x(small,p2,t6) - 0.1756494509*x(small,p2,t7) - 0.1756494509*x(small,p2,t8) - 0.1756494509*x(small,p2,t9) - 0.1111290516*x(small,p3,t1) - 0.1111290516*x(small,p3,t2) - 0.1111290516*x(small,p3,t3) - 0.1111290516*x(small,p3,t4) - 0.1756494509*x(small,p3,t5) - 0.1756494509*x(small,p3,t6) - 0.1756494509*x(small,p3,t7) - 0.1756494509*x(small,p3,t8) - 0.1756494509*x(small,p3,t9) + cost =E= 0 ; (LHS = 0)
+     
+
+---- limites_debit_sup  =L=  limite supp de debit dans les pompes
+
+limites_debit_sup(small,p1,t1)..  q_pompe(small,p1,t1) - 1000*x(small,p1,t1) =L= 0 ; (LHS = 0)
+     
+limites_debit_sup(small,p1,t2)..  q_pompe(small,p1,t2) - 1000*x(small,p1,t2) =L= 0 ; (LHS = 0)
+     
+limites_debit_sup(small,p1,t3)..  q_pompe(small,p1,t3) - 1000*x(small,p1,t3) =L= 0 ; (LHS = 0)
+     
+REMAINING 24 ENTRIES SKIPPED
+
+
+---- limites_debit_inf  =G=  limite inf de debit dans les pompes
+
+limites_debit_inf(small,p1,t1)..  q_pompe(small,p1,t1) - x(small,p1,t1) =G= 0 ; (LHS = 0)
+     
+limites_debit_inf(small,p1,t2)..  q_pompe(small,p1,t2) - x(small,p1,t2) =G= 0 ; (LHS = 0)
+     
+limites_debit_inf(small,p1,t3)..  q_pompe(small,p1,t3) - x(small,p1,t3) =G= 0 ; (LHS = 0)
+     
+REMAINING 24 ENTRIES SKIPPED
+
+
+---- conservation_debit  =E=  conservation des debits aux noeuds
+
+conservation_debit(j1,t1)..  - q_pipe(s,j1,t1) + q_pipe(j1,j2,t1) + q_pipe(j1,r1,t1) + q_pipe(j1,r4,t1) =E= 0 ; (LHS = 0)
+     
+conservation_debit(j1,t2)..  - q_pipe(s,j1,t2) + q_pipe(j1,j2,t2) + q_pipe(j1,r1,t2) + q_pipe(j1,r4,t2) =E= 0 ; (LHS = 0)
+     
+conservation_debit(j1,t3)..  - q_pipe(s,j1,t3) + q_pipe(j1,j2,t3) + q_pipe(j1,r1,t3) + q_pipe(j1,r4,t3) =E= 0 ; (LHS = 0)
+     
+REMAINING 15 ENTRIES SKIPPED
+
+
+---- offre_demande  =E=  equilibre offre demande dans les reservoirs
+
+offre_demande(r1,t1)..  q_pipe(j1,r1,t1) + v(r1,t1) =E= 109.83 ; (LHS = 100, INFES = 9.83 ****)
+     
+offre_demande(r1,t2)..  q_pipe(j1,r1,t2) - v(r1,t1) + v(r1,t2) =E= 5 ; (LHS = 0, INFES = 5 ****)
+     
+offre_demande(r1,t3)..  q_pipe(j1,r1,t3) - v(r1,t2) + v(r1,t3) =E= 3.67 ; (LHS = 0, INFES = 3.67 ****)
+     
+REMAINING 33 ENTRIES SKIPPED
+
+
+---- source  =E=  cf erreur plus bas
+
+source(t1)..  q_pompe(small,p1,t1) + q_pompe(small,p2,t1) + q_pompe(small,p3,t1) - q_pipe(s,j1,t1) =E= 0 ; (LHS = 0)
+     
+source(t2)..  q_pompe(small,p1,t2) + q_pompe(small,p2,t2) + q_pompe(small,p3,t2) - q_pipe(s,j1,t2) =E= 0 ; (LHS = 0)
+     
+source(t3)..  q_pompe(small,p1,t3) + q_pompe(small,p2,t3) + q_pompe(small,p3,t3) - q_pipe(s,j1,t3) =E= 0 ; (LHS = 0)
+     
+REMAINING 6 ENTRIES SKIPPED
+
+GAMS 47.5.0  d6b95593 Aug 29, 2024          WEX-WEI x86 64bit/MS Windows - 12/12/25 14:41:48 Page 4
+Pump scheduling smallest
+Column Listing      SOLVE pompe Using MINLP From line 145
+
+
+---- q_pompe  débit dans la pompe k en m3.h^-1
+
+q_pompe(small,p1,t1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -0.0028  obj
+        1       limites_debit_sup(small,p1,t1)
+        1       limites_debit_inf(small,p1,t1)
+        1       source(t1)
+
+q_pompe(small,p1,t2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -0.0028  obj
+        1       limites_debit_sup(small,p1,t2)
+        1       limites_debit_inf(small,p1,t2)
+        1       source(t2)
+
+q_pompe(small,p1,t3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -0.0028  obj
+        1       limites_debit_sup(small,p1,t3)
+        1       limites_debit_inf(small,p1,t3)
+        1       source(t3)
+
+REMAINING 24 ENTRIES SKIPPED
+
+---- q_pipe  débit dans le tuyau n-np en m3.h^-1
+
+q_pipe(s,j1,t1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       conservation_debit(j1,t1)
+       -1       source(t1)
+
+q_pipe(s,j1,t2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       conservation_debit(j1,t2)
+       -1       source(t2)
+
+q_pipe(s,j1,t3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       conservation_debit(j1,t3)
+       -1       source(t3)
+
+REMAINING 51 ENTRIES SKIPPED
+
+---- x  etat pompe
+
+x(small,p1,t1)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -0.1111  obj
+    -1000       limites_debit_sup(small,p1,t1)
+       -1       limites_debit_inf(small,p1,t1)
+
+x(small,p1,t2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -0.1111  obj
+    -1000       limites_debit_sup(small,p1,t2)
+       -1       limites_debit_inf(small,p1,t2)
+
+x(small,p1,t3)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -0.1111  obj
+    -1000       limites_debit_sup(small,p1,t3)
+       -1       limites_debit_inf(small,p1,t3)
+
+REMAINING 24 ENTRIES SKIPPED
+
+---- cost  cout total electricite en euro
+
+cost
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       obj
+
+
+---- v  volume d eau dans le reservoir r en m3
+
+v(r1,t1)
+                (.LO, .L, .UP, .M = 100, 100, 300, 0)
+        1       offre_demande(r1,t1)
+       -1       offre_demande(r1,t2)
+        0       (OLD LEVEL ****)
+
+v(r1,t2)
+                (.LO, .L, .UP, .M = 100, 100, 300, 0)
+        1       offre_demande(r1,t2)
+       -1       offre_demande(r1,t3)
+        0       (OLD LEVEL ****)
+
+v(r1,t3)
+                (.LO, .L, .UP, .M = 100, 100, 300, 0)
+        1       offre_demande(r1,t3)
+       -1       offre_demande(r1,t4)
+        0       (OLD LEVEL ****)
+
+REMAINING 33 ENTRIES SKIPPED
+GAMS 47.5.0  d6b95593 Aug 29, 2024          WEX-WEI x86 64bit/MS Windows - 12/12/25 14:41:48 Page 5
+Pump scheduling smallest
+Range Statistics    SOLVE pompe Using MINLP From line 145
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 8.300E-01, 1.448E+02] - Zero values observed as well
+Bound     [min, max] : [ 1.000E+00, 3.000E+02] - Zero values observed as well
+Matrix    [min, max] : [ 2.807E-03, 1.000E+03]
+
+GAMS 47.5.0  d6b95593 Aug 29, 2024          WEX-WEI x86 64bit/MS Windows - 12/12/25 14:41:48 Page 6
+Pump scheduling smallest
+Model Statistics    SOLVE pompe Using MINLP From line 145
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           6     SINGLE EQUATIONS          118
+BLOCKS OF VARIABLES           5     SINGLE VARIABLES          145  36 projected
+NON ZERO ELEMENTS           366     NON LINEAR N-Z              0
+CODE LENGTH                   0     CONSTANT POOL              16     DISCRETE VARIABLES         27
+
+
+GENERATION TIME      =        0.031 SECONDS      4 MB  47.5.0 d6b95593 WEX-WEI
+GAMS 47.5.0  d6b95593 Aug 29, 2024          WEX-WEI x86 64bit/MS Windows - 12/12/25 14:41:48 Page 7
+Pump scheduling smallest
+Solution Report     SOLVE pompe Using MINLP From line 145
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   pompe               OBJECTIVE  cost
+     TYPE    MINLP               DIRECTION  MINIMIZE
+     SOLVER  DICOPT              FROM LINE  145
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                0.0000
+
+ RESOURCE USAGE, LIMIT          0.016 10000000000.000
+ ITERATION COUNT, LIMIT         0    2147483647
+ EVALUATION ERRORS             NA             0
+-------------------------------------------------------------------------------
+Dicopt 2         47.5.0 d6b95593 Aug 29, 2024          WEI x86 64bit/MS Window
+-------------------------------------------------------------------------------
+*** This solver runs with a community license.
+--- DICOPT: No non-linearities found: executing the MIP solver
+
+      The model is linear (possibly with integer variables).
+      We will call the MIP solver to solve it for you.
+
+      Advice: use a MIP solver to solve this problem.
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.53 Mb (peak 0.53 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.1.0 link memory 0.00 Mb (peak 0.02 Mb)
+--- Starting Cplex
+
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.02sec (det. 0.35 ticks)
+
+--- Returning a primal only solution to GAMS (marginals all set to NA).
+--- Fixing integer variables and solving final LP...
+
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.11 ticks)
+
+
+Proven optimal solution
+MIP Solution:            0.000000    (0 iterations, 0 nodes)
+Final Solve:             0.000000    (0 iterations)
+
+Best possible:           0.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+
+  obj  objectif cout total electricite
+
+---- EQU limites_debit_sup  limite supp de debit dans les pompes
+
+                   LOWER          LEVEL          UPPER         MARGINAL
+
+small.p1.t1        -INF             .              .              .          
+small.p1.t2        -INF             .              .              .          
+small.p1.t3        -INF             .              .              .          
+small.p1.t4        -INF             .              .              .          
+small.p1.t5        -INF             .              .              .          
+small.p1.t6        -INF             .              .              .          
+small.p1.t7        -INF             .              .              .          
+small.p1.t8        -INF             .              .              .          
+small.p1.t9        -INF             .              .              .          
+small.p2.t1        -INF             .              .              .          
+small.p2.t2        -INF             .              .              .          
+small.p2.t3        -INF             .              .              .          
+small.p2.t4        -INF             .              .              .          
+small.p2.t5        -INF             .              .              .          
+small.p2.t6        -INF             .              .              .          
+small.p2.t7        -INF             .              .              .          
+small.p2.t8        -INF             .              .              .          
+small.p2.t9        -INF             .              .              .          
+small.p3.t1        -INF             .              .              .          
+small.p3.t2        -INF             .              .              .          
+small.p3.t3        -INF             .              .              .          
+small.p3.t4        -INF             .              .              .          
+small.p3.t5        -INF             .              .              .          
+small.p3.t6        -INF             .              .              .          
+small.p3.t7        -INF             .              .              .          
+small.p3.t8        -INF             .              .              .          
+small.p3.t9        -INF             .              .              .          
+
+---- EQU limites_debit_inf  limite inf de debit dans les pompes
+
+                   LOWER          LEVEL          UPPER         MARGINAL
+
+small.p1.t1          .              .            +INF             .          
+small.p1.t2          .              .            +INF             .          
+small.p1.t3          .              .            +INF             .          
+small.p1.t4          .              .            +INF             .          
+small.p1.t5          .              .            +INF             .          
+small.p1.t6          .              .            +INF             .          
+small.p1.t7          .              .            +INF             .          
+small.p1.t8          .              .            +INF             .          
+small.p1.t9          .              .            +INF             .          
+small.p2.t1          .              .            +INF             .          
+small.p2.t2          .              .            +INF             .          
+small.p2.t3          .              .            +INF             .          
+small.p2.t4          .              .            +INF             .          
+small.p2.t5          .              .            +INF             .          
+small.p2.t6          .              .            +INF             .          
+small.p2.t7          .              .            +INF             .          
+small.p2.t8          .              .            +INF             .          
+small.p2.t9          .              .            +INF             .          
+small.p3.t1          .              .            +INF             .          
+small.p3.t2          .              .            +INF             .          
+small.p3.t3          .              .            +INF             .          
+small.p3.t4          .              .            +INF             .          
+small.p3.t5          .              .            +INF             .          
+small.p3.t6          .              .            +INF             .          
+small.p3.t7          .              .            +INF             .          
+small.p3.t8          .              .            +INF             .          
+small.p3.t9          .              .            +INF             .          
+
+---- EQU conservation_debit  conservation des debits aux noeuds
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+j1.t1          .              .              .              .          
+j1.t2          .              .              .              .          
+j1.t3          .              .              .              .          
+j1.t4          .              .              .              .          
+j1.t5          .              .              .              .          
+j1.t6          .              .              .              .          
+j1.t7          .              .              .              .          
+j1.t8          .              .              .              .          
+j1.t9          .              .              .              .          
+j2.t1          .              .              .              .          
+j2.t2          .              .              .              .          
+j2.t3          .              .              .              .          
+j2.t4          .              .              .              .          
+j2.t5          .              .              .              .          
+j2.t6          .              .              .              .          
+j2.t7          .              .              .              .          
+j2.t8          .              .              .              .          
+j2.t9          .              .              .              .          
+
+---- EQU offre_demande  equilibre offre demande dans les reservoirs
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+r1.t1       109.8300       109.8300       109.8300         EPS         
+r1.t2         5.0000         5.0000         5.0000         EPS         
+r1.t3         3.6700         3.6700         3.6700         EPS         
+r1.t4         6.5000         6.5000         6.5000         EPS         
+r1.t5         5.6700         5.6700         5.6700         EPS         
+r1.t6         7.5000         7.5000         7.5000         EPS         
+r1.t7         3.0000         3.0000         3.0000         EPS         
+r1.t8         3.0000         3.0000         3.0000         EPS         
+r1.t9         2.0000         2.0000         2.0000         EPS         
+r2.t1       144.8300       144.8300       144.8300         EPS         
+r2.t2        18.0000        18.0000        18.0000         EPS         
+r2.t3          .              .              .             EPS         
+r2.t4          .              .              .             EPS         
+r2.t5          .              .              .             EPS         
+r2.t6          .              .              .             EPS         
+r2.t7          .              .              .             EPS         
+r2.t8        45.0000        45.0000        45.0000         EPS         
+r2.t9        51.6700        51.6700        51.6700         EPS         
+r3.t1       114.0000       114.0000       114.0000         EPS         
+r3.t2        13.3300        13.3300        13.3300         EPS         
+r3.t3        25.5000        25.5000        25.5000         EPS         
+r3.t4        11.0000        11.0000        11.0000         EPS         
+r3.t5        10.0000        10.0000        10.0000         EPS         
+r3.t6        10.0000        10.0000        10.0000         EPS         
+r3.t7        11.0000        11.0000        11.0000         EPS         
+r3.t8        10.3300        10.3300        10.3300         EPS         
+r3.t9        30.1700        30.1700        30.1700         EPS         
+r4.t1       101.0000       101.0000       101.0000         EPS         
+r4.t2         1.0000         1.0000         1.0000         EPS         
+r4.t3         8.5000         8.5000         8.5000         EPS         
+r4.t4         9.5000         9.5000         9.5000         EPS         
+r4.t5         4.0000         4.0000         4.0000         EPS         
+r4.t6         2.3300         2.3300         2.3300         EPS         
+r4.t7          .              .              .             EPS         
+r4.t8         1.0000         1.0000         1.0000         EPS         
+r4.t9         0.8300         0.8300         0.8300         EPS         
+
+---- EQU source  cf erreur plus bas
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+t1          .              .              .              .          
+t2          .              .              .              .          
+t3          .              .              .              .          
+t4          .              .              .              .          
+t5          .              .              .              .          
+t6          .              .              .              .          
+t7          .              .              .              .          
+t8          .              .              .              .          
+t9          .              .              .              .          
+
+---- VAR q_pompe  débit dans la pompe k en m3.h^-1
+
+                   LOWER          LEVEL          UPPER         MARGINAL
+
+small.p1.t1          .              .            +INF            0.0028      
+small.p1.t2          .              .            +INF            0.0028      
+small.p1.t3          .              .            +INF            0.0028      
+small.p1.t4          .              .            +INF            0.0028      
+small.p1.t5          .              .            +INF            0.0044      
+small.p1.t6          .              .            +INF            0.0044      
+small.p1.t7          .              .            +INF            0.0044      
+small.p1.t8          .              .            +INF            0.0044      
+small.p1.t9          .              .            +INF            0.0044      
+small.p2.t1          .              .            +INF            0.0028      
+small.p2.t2          .              .            +INF            0.0028      
+small.p2.t3          .              .            +INF            0.0028      
+small.p2.t4          .              .            +INF            0.0028      
+small.p2.t5          .              .            +INF            0.0044      
+small.p2.t6          .              .            +INF            0.0044      
+small.p2.t7          .              .            +INF            0.0044      
+small.p2.t8          .              .            +INF            0.0044      
+small.p2.t9          .              .            +INF            0.0044      
+small.p3.t1          .              .            +INF            0.0028      
+small.p3.t2          .              .            +INF            0.0028      
+small.p3.t3          .              .            +INF            0.0028      
+small.p3.t4          .              .            +INF            0.0028      
+small.p3.t5          .              .            +INF            0.0044      
+small.p3.t6          .              .            +INF            0.0044      
+small.p3.t7          .              .            +INF            0.0044      
+small.p3.t8          .              .            +INF            0.0044      
+small.p3.t9          .              .            +INF            0.0044      
+
+---- VAR q_pipe  débit dans le tuyau n-np en m3.h^-1
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+s .j1.t1          .              .            +INF            EPS         
+s .j1.t2          .              .            +INF            EPS         
+s .j1.t3          .              .            +INF            EPS         
+s .j1.t4          .              .            +INF            EPS         
+s .j1.t5          .              .            +INF            EPS         
+s .j1.t6          .              .            +INF            EPS         
+s .j1.t7          .              .            +INF            EPS         
+s .j1.t8          .              .            +INF            EPS         
+s .j1.t9          .              .            +INF            EPS         
+j1.j2.t1          .              .            +INF            EPS         
+j1.j2.t2          .              .            +INF            EPS         
+j1.j2.t3          .              .            +INF            EPS         
+j1.j2.t4          .              .            +INF            EPS         
+j1.j2.t5          .              .            +INF            EPS         
+j1.j2.t6          .              .            +INF            EPS         
+j1.j2.t7          .              .            +INF            EPS         
+j1.j2.t8          .              .            +INF            EPS         
+j1.j2.t9          .              .            +INF            EPS         
+j1.r1.t1          .              .            +INF            EPS         
+j1.r1.t2          .              .            +INF            EPS         
+j1.r1.t3          .              .            +INF            EPS         
+j1.r1.t4          .              .            +INF            EPS         
+j1.r1.t5          .              .            +INF            EPS         
+j1.r1.t6          .              .            +INF            EPS         
+j1.r1.t7          .              .            +INF            EPS         
+j1.r1.t8          .              .            +INF            EPS         
+j1.r1.t9          .              .            +INF            EPS         
+j1.r4.t1          .              .            +INF            EPS         
+j1.r4.t2          .              .            +INF            EPS         
+j1.r4.t3          .              .            +INF            EPS         
+j1.r4.t4          .              .            +INF            EPS         
+j1.r4.t5          .              .            +INF            EPS         
+j1.r4.t6          .              .            +INF            EPS         
+j1.r4.t7          .              .            +INF            EPS         
+j1.r4.t8          .              .            +INF            EPS         
+j1.r4.t9          .              .            +INF            EPS         
+j2.r2.t1          .              .            +INF            EPS         
+j2.r2.t2          .              .            +INF            EPS         
+j2.r2.t3          .              .            +INF            EPS         
+j2.r2.t4          .              .            +INF            EPS         
+j2.r2.t5          .              .            +INF            EPS         
+j2.r2.t6          .              .            +INF            EPS         
+j2.r2.t7          .              .            +INF            EPS         
+j2.r2.t8          .              .            +INF            EPS         
+j2.r2.t9          .              .            +INF            EPS         
+j2.r3.t1          .              .            +INF            EPS         
+j2.r3.t2          .              .            +INF            EPS         
+j2.r3.t3          .              .            +INF            EPS         
+j2.r3.t4          .              .            +INF            EPS         
+j2.r3.t5          .              .            +INF            EPS         
+j2.r3.t6          .              .            +INF            EPS         
+j2.r3.t7          .              .            +INF            EPS         
+j2.r3.t8          .              .            +INF            EPS         
+j2.r3.t9          .              .            +INF            EPS         
+
+---- VAR x  etat pompe
+
+                   LOWER          LEVEL          UPPER         MARGINAL
+
+small.p1.t1          .              .             1.0000         0.1111      
+small.p1.t2          .              .             1.0000         0.1111      
+small.p1.t3          .              .             1.0000         0.1111      
+small.p1.t4          .              .             1.0000         0.1111      
+small.p1.t5          .              .             1.0000         0.1756      
+small.p1.t6          .              .             1.0000         0.1756      
+small.p1.t7          .              .             1.0000         0.1756      
+small.p1.t8          .              .             1.0000         0.1756      
+small.p1.t9          .              .             1.0000         0.1756      
+small.p2.t1          .              .             1.0000         0.1111      
+small.p2.t2          .              .             1.0000         0.1111      
+small.p2.t3          .              .             1.0000         0.1111      
+small.p2.t4          .              .             1.0000         0.1111      
+small.p2.t5          .              .             1.0000         0.1756      
+small.p2.t6          .              .             1.0000         0.1756      
+small.p2.t7          .              .             1.0000         0.1756      
+small.p2.t8          .              .             1.0000         0.1756      
+small.p2.t9          .              .             1.0000         0.1756      
+small.p3.t1          .              .             1.0000         0.1111      
+small.p3.t2          .              .             1.0000         0.1111      
+small.p3.t3          .              .             1.0000         0.1111      
+small.p3.t4          .              .             1.0000         0.1111      
+small.p3.t5          .              .             1.0000         0.1756      
+small.p3.t6          .              .             1.0000         0.1756      
+small.p3.t7          .              .             1.0000         0.1756      
+small.p3.t8          .              .             1.0000         0.1756      
+small.p3.t9          .              .             1.0000         0.1756      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR cost              -INF             .            +INF             .          
+
+  cost  cout total electricite en euro
+
+---- VAR v  volume d eau dans le reservoir r en m3
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+r1.t1       100.0000       109.8300       300.0000          .          
+r1.t2       100.0000       114.8300       300.0000          .          
+r1.t3       100.0000       118.5000       300.0000          .          
+r1.t4       100.0000       125.0000       300.0000          .          
+r1.t5       100.0000       130.6700       300.0000          .          
+r1.t6       100.0000       138.1700       300.0000          .          
+r1.t7       100.0000       141.1700       300.0000          .          
+r1.t8       100.0000       144.1700       300.0000          .          
+r1.t9       100.0000       146.1700       300.0000          .          
+r2.t1       100.0000       144.8300       300.0000          .          
+r2.t2       100.0000       162.8300       300.0000          .          
+r2.t3       100.0000       162.8300       300.0000          .          
+r2.t4       100.0000       162.8300       300.0000          .          
+r2.t5       100.0000       162.8300       300.0000          .          
+r2.t6       100.0000       162.8300       300.0000          .          
+r2.t7       100.0000       162.8300       300.0000          .          
+r2.t8       100.0000       207.8300       300.0000          .          
+r2.t9       100.0000       259.5000       300.0000          .          
+r3.t1       100.0000       114.0000       300.0000          .          
+r3.t2       100.0000       127.3300       300.0000          .          
+r3.t3       100.0000       152.8300       300.0000          .          
+r3.t4       100.0000       163.8300       300.0000          .          
+r3.t5       100.0000       173.8300       300.0000          .          
+r3.t6       100.0000       183.8300       300.0000          .          
+r3.t7       100.0000       194.8300       300.0000          .          
+r3.t8       100.0000       205.1600       300.0000          .          
+r3.t9       100.0000       235.3300       300.0000          .          
+r4.t1       100.0000       101.0000       300.0000          .          
+r4.t2       100.0000       102.0000       300.0000          .          
+r4.t3       100.0000       110.5000       300.0000          .          
+r4.t4       100.0000       120.0000       300.0000          .          
+r4.t5       100.0000       124.0000       300.0000          .          
+r4.t6       100.0000       126.3300       300.0000          .          
+r4.t7       100.0000       126.3300       300.0000          .          
+r4.t8       100.0000       127.3300       300.0000          .          
+r4.t9       100.0000       128.1600       300.0000          .          
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+GAMS 47.5.0  d6b95593 Aug 29, 2024          WEX-WEI x86 64bit/MS Windows - 12/12/25 14:41:48 Page 8
+Pump scheduling smallest
+E x e c u t i o n
+
+
+----    147 VARIABLE cost.L                =        0.000  cout total electricite en euro
+
+----    147 VARIABLE x.L  etat pompe
+
+                      ( ALL       0.000 )
+
+
+----    147 VARIABLE q_pompe.L  débit dans la pompe k en m3.h^-1
+
+                      ( ALL       0.000 )
+
+
+----    147 VARIABLE q_pipe.L  débit dans le tuyau n-np en m3.h^-1
+
+                      ( ALL       0.000 )
+
+
+----    147 VARIABLE v.L  volume d eau dans le reservoir r en m3
+
+            t1          t2          t3          t4          t5          t6          t7          t8          t9
+
+r1     109.830     114.830     118.500     125.000     130.670     138.170     141.170     144.170     146.170
+r2     144.830     162.830     162.830     162.830     162.830     162.830     162.830     207.830     259.500
+r3     114.000     127.330     152.830     163.830     173.830     183.830     194.830     205.160     235.330
+r4     101.000     102.000     110.500     120.000     124.000     126.330     126.330     127.330     128.160
+
+
+
+EXECUTION TIME       =        0.109 SECONDS      4 MB  47.5.0 d6b95593 WEX-WEI
 
 
 USER: Large MUD-20 User License                      G240920|0002AO-GEN
