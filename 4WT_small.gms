@@ -107,7 +107,8 @@ Variables
     q_pipe(n,np,t) débit dans le tuyau n-np en m3.h^-1
     x(c,d,t)    etat pompe
     cost      cout total electricite en euro
-    v(r,t) volume d eau dans le reservoir r en m3;
+    v(r,t) volume d eau dans le reservoir r en m3
+    h(n,t) charge a chaque noeud;
 
 v.lo(r,t) = vmin(r);
 v.up(r,t) = vmax(r);
@@ -125,7 +126,11 @@ Equations
     conservation_debit(j,t)      conservation des debits aux noeuds
     offre_demande(r,t)       equilibre offre demande dans les reservoirs
 
-    source(t)   cf erreur plus bas;
+    source(t)   cf erreur plus bas
+    hauteur_jonction(j,t)   la charge au nv de la jonction doit-être suffisante pour la hauteur
+    Perte_charge(n,np,t)   la perte de charge dans le tuyau
+    charge_source(n,c,d,t)
+    hauteur_reservoir(r,t)  la charge au nv du réservoir doit-être suffisante pour la hauteur;
 
 obj.. cost =e= sum((c,d,t), tariff(t)*(gamma(c,'0')*x(c,d,t)+gamma(c,'1')*q_pompe(c,d,t)));
 limites_debit_sup(c,d,t).. q_pompe(c,d,t) =l= Qmax*x(c,d,t);
@@ -140,10 +145,15 @@ offre_demande(r,t).. sum(n$l(n,r),q_pipe(n,r,t)) + v(r,t-1) + vinit(r)$(ord(t)=1
 * quel intérêt d'avoir plusieurs pompes alors ? et on en a 2 ou 3 ?
 source(t).. sum((c,d), q_pompe(c,d,t) ) =e= sum(n$l("s",n), q_pipe("s",n,t));
 
+*Contraintes de charge:
+hauteur_jonction(j,t).. h(j,t) =g= height(j);
+perte_charge(l(n,np),t).. h(n,t) - h(np,t) =e= phi(n,np,'1')*q_pipe(n,np,t) + phi(n,np,'2')*q_pipe(n,np,t)**2;
+charge_source("s",c,d,t).. h("s",t)*x(c,d,t) =e= psi(c,'0')*x(c,d,t) + psi(c,'2')*q_pompe(c,d,t)**2;
+hauteur_reservoir(r,t).. h(r,t) =g= height(r) + v(r,t)/surface(r);
+
+
 
 model pompe / all /;
 solve pompe using minlp minimizing cost;
 
 display cost.l, x.l, q_pompe.l, q_pipe.l, v.l;
-
-*modifier pour passer sur les groupes des trucs et pas c,d ... et debeug
