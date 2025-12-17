@@ -45,7 +45,7 @@ Scalar
      tariffnight  electricity hourly tariff at night (euro.kWh^-1)  / 0.02916 /
      tariffday    electricity hourly tariff at day (euro.kWh^-1)    / 0.04609 /
      Qmin   debit min /1/
-     Qmax    debit max  /25/
+     Qmax    debit max  /80/
 
 Parameter tariff(t)   electricity tariff;
     tariff(t)        = tariffday;
