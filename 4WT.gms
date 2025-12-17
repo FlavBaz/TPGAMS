@@ -88,8 +88,7 @@ Positive Variables q_pompe, q_pipe,p_pompe,h;
 
 Equations
 * toujours pas de k,l ...
-    obj         objectif cout total electricite
-
+    obj             objectif cout total electricite
     limites_debit_sup(c,d,t)       limite supp de debit dans les pompes
     limites_debit_inf(c,d,t)       limite inf de debit dans les pompes
 *limite_debit_pipe(n,np,t)   limite de debit dans les tuyaux

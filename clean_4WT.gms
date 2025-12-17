@@ -6,6 +6,7 @@ Sets
      r(n)       reservoirs  / r1, r2, r3, r4 /
      l(n,n)     pipes       / s.j1, j1.j2, j1.r1, j1.r4, j2.r2, j2.r3 /
      t          1-hour periods  / t1*t24 /
+     tcalc(t)   t juste pour le calcul / t1*t24 /
      night(t)   night periods   / t1*t8 /      
      c          pump class    / small /
      d          pump number   / p1*p3 /
@@ -17,12 +18,12 @@ Sets
      alias (d,dp);
 
 Scalar
-     height0      reference height at the Debit_s (m)     / 0 /
+     height0      reference height at the debit_s (m)     / 0 /
      tariffnight  electricity hourly tariff at night (euro.kWh^-1) / 0.02916 /
      tariffday    electricity hourly tariff at day (euro.kWh^-1)   / 0.04609 /
      Qmin  m^3.h^-1   minimal debit for pumps    / 1 /
      Qmax  m^3.h^-1   maximal debit for pumps    / 90 /
-     Q_pipe_max  m^3.h^-1   maximal debit for pipes    / 1000 /;
+     Q_pipe_max  m^3.h^-1   maximal debit for pipes    / 300 /;
 
 Parameter tariff(t)   electricity tariff;
     tariff(t)        = tariffday;
@@ -43,6 +44,7 @@ Parameters
 
 Parameter vinit(r) initial volume of each reservoir;
     vinit(r) = vmin(r);
+
 
 Table psi(c,degree) quadratic fit of the service pressure (m) on the flow (m^3.h^-1) for each class of pumps
                   0              1            2
@@ -68,52 +70,73 @@ Table phi(n,n,degree) quadratic fit of the pressure loss (m) on the flow (m^3.h^
      j2.r2      0.00223839      0.00851091
      j2.r3      0.00134303      0.00510655;
 
+
 Variables 
-q_pipe(n,n,t)
-q_pompe(c,d,t)
-p_pompe(c,d,t)
-v(n,t)
-x(c,d,t)
-cost;
+    q_pipe(n,n,t)    débit dans le tuyau n.np en m3.h^-1
+    q_pompe(c,d,t)   débit dans la pompe k en m3.h^-1
+    p_pompe(c,d,t)   puissance électrique de la pompe k en kW
+    v(n,t)           volume eau dans le réservoir r(n) en m3
+    x(c,d,t)         variable binaire indiquant si la pompe k est en fonctionnement à instant t
+    h(n,t)           charge au niveau du noeud n à instant t (m)
+    cost             cout total electricite (euro);
 
 v.up(r,t) = vmax(r);
 v.lo(r,t) = vmin(r);
+*h.lo("s",t)$(tcalc(t) and ord(t)=1) = 0;
+*h.up("s",t)$(tcalc(t) and ord(t)=1) = 0 + 1e-3;
 
 Positive variables q_pompe, p_pompe, q_pipe;
 Binary variable x;
 
 Equations
-    obj 
+    obj                           objectif cout total electricite
     conservation_debit(n,t)
-    offre_demande(r,t)
-    Conso_pompe(c,d,t)
-    limites_debit_inf(c,d,t)
-    limites_debit_sup(c,d,t)
-    Debit_s(t);
+    offre_demande(r,t)            equilibre offre demande dans les reservoirs
+    conso_pompe(c,d,t)
+    limites_debit_sup(c,d,t)      limite supp de debit dans les pompes
+    limites_debit_inf(c,d,t)      limite inf de debit dans les pompes
+    debit_s(t)                    debit à la source au nv des pompes
+
+    
+   hauteur_jonction(j,t)         la charge au nv de la jonction doit-être suffisante pour la hauteur
+   Perte_charge(n,np,t)          la perte de charge dans le tuyau
+   charge_source(n,c,d,t)        fixe la charge nécessaire à la source
+   hauteur_reservoir(r,t)        la charge au nv du réservoir doit-être suffisante pour la hauteur
+
+   limite_debit_pipe(n,np,t)     limite de debit dans les tuyaux;
+
+
 * le nb d'etapes change avec l'ordre des equations ci-dessus des fois, et aussi des fois quand par exemple je multiplie par -1 des 2 cotés
 
-conservation_debit(j,t).. 
-    sum(n$(l(j,n)), q_pipe(j,n,t)) 
-   =e= sum(n$(l(n,j)), q_pipe(n,j,t)) ;
+conservation_debit(j,tcalc)..    sum(n$(l(j,n)), q_pipe(j,n,tcalc))            =e=   sum(n$(l(n,j)), q_pipe(n,j,tcalc)) ;
 
-offre_demande(r,t).. 
-   v(r,t) - v(r,t-1) 
-  - vinit(r)$(ord(t)=1) 
-  =e=  sum(n$l(n,r),q_pipe(n,r,t)) - demand(r,t);
+offre_demande(r,tcalc)..         v(r,tcalc) - v(r,tcalc-1) - vinit(r)$(ord(tcalc)=1)   =e=   sum(n$l(n,r),q_pipe(n,r,tcalc)) - demand(r,tcalc);
 
+conso_pompe(k(c,d),tcalc)..      p_pompe(k,tcalc)                              =g=   gamma(c,"0") * x(k,tcalc) + gamma(c,"1")*q_pompe(k,tcalc);
 
-Conso_pompe(k(c,d),t).. 
-    p_pompe(k,t) =g= gamma(c,"0") * x(k,t) + gamma(c,"1")*q_pompe(k,t);
+limites_debit_sup(k,tcalc)..     q_pompe(k,tcalc)                              =l=   x(k,tcalc)*Qmax;
 
-limites_debit_sup(k,t).. q_pompe(k,t) =l= x(k,t)*Qmax;
-limites_debit_inf(k,t).. q_pompe(k,t) =g= x(k,t)*Qmin;
+limites_debit_inf(k,tcalc)..     q_pompe(k,tcalc)                              =g=   x(k,tcalc)*Qmin;
 
+debit_s(tcalc)..                 sum(n$l("s",n), q_pipe("s",n,tcalc))          =e=   sum(k, q_pompe(k,tcalc));
 
-Debit_s(t).. 
-    sum(n$l("s",n), q_pipe("s",n,t)) 
-  =e= sum(k, q_pompe(k,t));
+obj..                        cost                                      =e=   sum((k,tcalc), tariff(tcalc)*p_pompe(k,tcalc));
 
-obj.. cost =e= sum((k,t), tariff(t)*p_pompe(k,t));
+limite_debit_pipe(l,tcalc)..     q_pipe(l,tcalc)                               =l=   Q_pipe_max;
 
+*contraintes de chagre:
+hauteur_jonction(j,tcalc)..    h(j,tcalc)                                    =g=   height(j);
+
+perte_charge(l(n,np),tcalc)..  h(n,tcalc) - h(np,tcalc)                          =e=   phi(n,np,'1')*q_pipe(n,np,tcalc) + phi(n,np,'2')*sqr(q_pipe(n,np,tcalc));
+
+charge_source("s",c,d,tcalc).. h("s",tcalc)*x(c,d,tcalc)                         =e=   psi(c,'0')*x(c,d,tcalc) + psi(c,'2')*sqr(q_pompe(c,d,tcalc));
+
+*semble inactive :
+hauteur_reservoir(r,tcalc)..   h(r,tcalc)                                    =g=   height(r) + v(r,tcalc)/surface(r);
+
+                             
 model pompe / all /;
+Option optcr = 0.1;
+Option reslim = 6;
 solve pompe using minlp minimizing cost;
+display cost.l, x.l, q_pompe.l, q_pipe.l, v.l, h.l;
