@@ -1,0 +1,186 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{enumitem}
+
+\geometry{margin=2cm}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.5em}
+
+\title{\textbf{Planification du pompage dans un réseau d'eau potable}\\
+\large Projet d'optimisation MINLP -- Réseau 4 Tanks}
+\author{Flavien BAZON}
+\date{\today}
+
+\begin{document}
+\maketitle
+\section{todo}
+
+- faire le customer networks
+- comment lancer les codes en ligne
+- tester le 4wt avec les solveurs adaptés pour chaqun des 3 cas
+- faire parreil pour le CN
+- faire les tableaux et la redaction
+
+% %==============================================================================
+% \section{Description du problème et modélisation}
+% %==============================================================================
+
+% Le réseau \textit{4 Tanks} est composé de 7 nœuds (1 source, 2 jonctions, 4 réservoirs), 3 pompes en parallèle et 6 canalisations. L'objectif est de minimiser le coût électrique du pompage sur un horizon de 24h avec tarification jour/nuit.
+
+% \subsection{Variables de décision}
+% \begin{itemize}[noitemsep]
+%     \item $x_{k,t} \in \{0,1\}$ : état de la pompe $k$ à l'instant $t$
+%     \item $q^{pompe}_{k,t} \geq 0$ : débit de la pompe $k$ (m³/h)
+%     \item $q^{pipe}_{n,n',t} \geq 0$ : débit dans la canalisation $(n,n')$ (m³/h)
+%     \item $h_{n,t}$ : charge hydraulique au nœud $n$ (m)
+%     \item $v_{r,t}$ : volume d'eau dans le réservoir $r$ (m³)
+% \end{itemize}
+
+% \subsection{Contraintes principales}
+% Conservation des débits, équilibre offre-demande, limites de volume, contraintes de perte de charge (quadratiques), contraintes de gain de charge des pompes (bilinéaires $h \cdot x$).
+
+%==============================================================================
+\section{Modèles implémentés (a reverifier le tableau et ajouter ;e customernetwork, aussi les options ...)}
+%==============================================================================
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{Modèle} & \textbf{Type} & \textbf{Convexité} & \textbf{Variables} \\
+\midrule
+MINLP complet & Quadratique & Non-convexe & Mixte (binaires + continues) \\
+Sans pression & Linéaire & Convexe & Mixte (binaires + continues) \\
+Relaxation convexe & Quadratique & Convexe & Mixte (binaires + continues) \\
+\bottomrule
+\end{tabular}
+\caption{Typologie des trois modèles implémentés}
+\label{tab:typologie}
+\end{table}
+
+\textbf{MINLP complet :} Modèle avec toutes les contraintes hydrauliques, incluant les pertes de charge quadratiques et les contraintes bilinéaires $h(s,t) \cdot x(k,t)$ pour le gain de charge des pompes.
+
+\textbf{Sans pression :} Relaxation où les contraintes de charge hydraulique sont supprimées. Seules restent les contraintes de conservation de débit et d'équilibre des réservoirs.
+
+\textbf{Relaxation convexe :} Les contraintes non-convexes (égalités bilinéaires) sont remplacées par des inégalités convexes.
+
+Modèles implémentés pour le 4WT et le customer network
+
+%==============================================================================
+\section{Méthodes de résolution}
+%==============================================================================
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Modèle} & \textbf{Solveur} & \textbf{Algorithme} & \textbf{Options} \\
+\midrule
+MINLP complet & DICOPT & OA (Outer Approximation) & optcr=0.01, reslim=300 \\
+MINLP complet & BARON & Branch-and-Reduce & optcr=0.01, reslim=300 \\
+Sans pression & CPLEX & Branch-and-Cut & optcr=0.01, reslim=30 \\
+Relax. convexe & DICOPT & OA & optcr=0.01, reslim=60 \\
+\bottomrule
+\end{tabular}
+\caption{Solveurs et configurations testés}
+\label{tab:solveurs}
+\end{table}
+
+%==============================================================================
+\section{Résultats numériques}
+%==============================================================================
+
+\subsection{Démarche et première analyse}
+
+J'ai d'abord testé le modèle 4Tanks MINLP complet en résolvant avec BARON sur le serveur ECOS, sur la 2e run j'ai rajouté une limite de temps de 300s pour comparer avec les résultats du tableau de référence.
+Les résultats obtenus sur ces 2 runs sont dans le tableau \ref{tab:runs_minlp}.
+
+Description BARON branch and bond
+
+Essayons maintenant avec DICOPT, en limitant à 300s pour comparer avec la référence, on obtient:
+
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+\textbf{Run} & \textbf{Coût (€)} & \textbf{Borne inf. (€)} & \textbf{Gap (\%)} & \textbf{Temps (s)}  \\
+\midrule
+BARON 1 (8h)   & 11.0006 & 9.8446 & 10.5 & 28\,902 \\
+BARON 2 (300s) & 11.4363 & 9.8446     & 13.9   & 300     \\
+\midrule
+\textit{Référence} & \textit{11.28} & -- & -- & \textit{300}  \\
+\bottomrule
+\end{tabular}
+\caption{Résultats des trois exécutions BARON sur le modèle MINLP complet}
+\label{tab:runs_minlp}
+\end{table}
+
+
+\subsection{Tableau}
+Pour le 4 tanks:
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+\textbf{Modèle} & \textbf{Solveur} & \textbf{Coût (€)} & \textbf{Borne inf.} & \textbf{Gap (\%)} & \textbf{Temps (s)} & \textbf{Itérations} \\
+\midrule
+MINLP complet & DICOPT & -- & 8.59 & -- & >9h & Échec mémoire \\
+MINLP complet & BARON & \textcolor{blue}{À compléter} & & & & \\
+Sans pression & CPLEX & \textcolor{blue}{À compléter} & & & & \\
+Relax. convexe & DICOPT & \textcolor{blue}{À compléter} & & & & \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Référence (sujet)}} & 11.28 / 9.73 / 10.99 & -- & -- & 300 / 30 / 60 & -- \\
+\bottomrule
+\end{tabular}
+\caption{Résultats obtenus pour le réseau 4 Tanks}
+\label{tab:resultats}
+\end{table}
+
+Pour le customer network
+
+%==============================================================================
+\section{Analyse et discussion}
+%==============================================================================
+
+\subsection{Difficultés rencontrées}
+
+Le modèle MINLP complet présente des contraintes bilinéaires de la forme $h(s,t) \cdot x(k,t)$ qui rendent le problème fortement non-convexe. Avec DICOPT/CPLEX, le solveur MIP a exploré plus de 350 millions de nœuds avant d'épuiser la mémoire disponible.
+
+\textcolor{blue}{[À compléter : autres difficultés rencontrées]}
+
+\subsection{Comparaison des modèles}
+
+\textcolor{blue}{[À compléter : comparer les coûts obtenus, qualité des solutions, temps de calcul]}
+
+La relaxation ``sans pression'' donne une borne inférieure sur le coût optimal mais la solution n'est pas nécessairement réalisable hydrauliquement. La relaxation convexe offre un bon compromis entre qualité de solution et temps de calcul.
+
+\subsection{Pistes d'amélioration}
+
+\begin{itemize}[noitemsep]
+    \item Utiliser des coupes de McCormick pour linéariser les termes bilinéaires
+    \item Tester des solveurs globaux (BARON, SCIP) avec des options de prétraitement
+    \item Implémenter une heuristique de réparation à partir de la solution relaxée
+    \item Réduire la symétrie entre les pompes identiques (contraintes de symétrie-breaking)
+\end{itemize}
+
+%==============================================================================
+\section*{Conclusion}
+%==============================================================================
+
+\textcolor{blue}{[À compléter : résumer les principaux résultats et conclusions]}
+
+%==============================================================================
+\begin{thebibliography}{9}
+\bibitem{bonvin2017} G. Bonvin, S. Demassey, C. Le Pape, V. Mazauric, N. Maïzi, A. Samperio (2017). A convex mathematical program for pump scheduling in a class of branched water networks, \textit{Applied Energy}, 185(2), 1702-1711.
+\end{thebibliography}
+
+\end{document}
