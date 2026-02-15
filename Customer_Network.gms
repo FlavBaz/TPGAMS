@@ -1,13 +1,6 @@
 $Title Pump Scheduling CusNet - 3 Modeles
 
-*==============================================================================
-* CHOIX DU MODELE (modifier ici)
-*==============================================================================
-* 1 = MINLP complet (non-convexe, utiliser BARON)
-* 2 = Sans pression (MIP lineaire, utiliser CPLEX)
-* 3 = Relaxation convexe (utiliser BARON ou DICOPT)
-*==============================================================================
-Scalar model_choice / 1 /;
+Scalar model_choice "1=MINLP complet, 2=Sans pression, 3=Relaxation convexe" / 3 /;
 
 Sets 
      n          nodes / s, j39, j14, j16, j17, j19, j21, j24, j26, j27, j30, j2, j3, j6, j7, j10, r12, r13, r132, r133, r134, r14, r15, r151, r16, r161, r17, r171, r18, r181, r19, r191 /
@@ -127,10 +120,6 @@ Table phi(n,n,degree) quadratic fit of the pressure loss (m) on the flow (m^3.h^
      j10.r18    0.0044362       0.0106558
      j10.r181   0.0003081       0.0016460;
 
-
-*==============================================================================
-* VARIABLES
-*==============================================================================
 
 Variables 
     q_pipe(n,n,t)    debit dans le tuyau n.np en m3.h^-1
@@ -260,9 +249,7 @@ charge_source_ineq_up("s",k(c,d),tcalc)..
     h("s",tcalc) =l= psi(c,'0') + BigM * (1 - x(c,d,tcalc));
 
 
-*==============================================================================
-* DEFINITION DES 3 MODELES
-*==============================================================================
+
 
 Model pompe_MINLP "Modele 1: MINLP complet (non-convexe)" /
     obj, conservation_debit, offre_demande, conso_pompe,
@@ -284,31 +271,24 @@ Model pompe_ConvexRelax "Modele 3: Relaxation convexe" /
 /;
 
 
-*==============================================================================
-* OPTIONS ET RESOLUTION
-*==============================================================================
-
-Option optcr = 0.01;
+*Option optcr = 0.01;
 Option reslim = 400;
 
 * Resolution selon le choix du modele
 if(model_choice = 1,
     display "=== RESOLUTION MODELE 1: MINLP COMPLET ===";
-    display "=== Solveur: BARON ===";
     Option minlp = BARON;
     solve pompe_MINLP using minlp minimizing cost;
 );
 
 if(model_choice = 2,
     display "=== RESOLUTION MODELE 2: SANS PRESSION (MIP) ===";
-    display "=== Solveur: CPLEX ===";
     Option mip = CPLEX;
     solve pompe_NoPressure using mip minimizing cost;
 );
 
 if(model_choice = 3,
     display "=== RESOLUTION MODELE 3: RELAXATION CONVEXE ===";
-    display "=== Solveur: BARON ===";
     Option minlp = BARON;
     solve pompe_ConvexRelax using minlp minimizing cost;
 );

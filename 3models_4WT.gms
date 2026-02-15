@@ -1,9 +1,6 @@
 $Title Pump Scheduling 4WT
 
-*==============================================================================
-* CHOIX DU MODÈLE
-*==============================================================================
-Scalar model_choice "1=MINLP complet, 2=Sans pression, 3=Relaxation convexe" / 1 /;
+Scalar model_choice "1=MINLP complet, 2=Sans pression, 3=Relaxation convexe" / 3 /;
 
 Sets 
      n          nodes       / s, j1, j2, r1, r2, r3, r4 /
@@ -91,9 +88,6 @@ v.lo(r,t) = vmin(r);
 Positive variables q_pompe, p_pompe, q_pipe;
 Binary variable x;
 
-*==============================================================================
-* EQUATIONS COMMUNES (tous les modèles)
-*==============================================================================
 Equations
     obj                           objectif cout total electricite
     conservation_debit(n,t)
@@ -116,10 +110,10 @@ Equations
 * EQUATIONS SPECIFIQUES MODELE 1 : MINLP COMPLET (égalité bilinéaire)
 *==============================================================================
 Equations
-    charge_source_eq(n,c,d,t)     charge source - egalite (MINLP complet);
+    charge_source_eq(n,c,d,t)     charge source;
 
 *==============================================================================
-* EQUATIONS SPECIFIQUES MODELE 3 : RELAXATION CONVEXE (inégalités)
+* EQUATIONS SPECIFIQUES MODELE 3 : RELAXATION CONVEXE, ie remplace ci-dessus
 *==============================================================================
 Equations
     charge_source_ineq_lo(n,c,d,t)   borne inferieure relaxee
@@ -157,9 +151,8 @@ hauteur_reservoir(r,tcalc)..     h(r,tcalc) =g= height(r) + v(r,tcalc)/surface(r
 perte_charge(l(n,np),tcalc)..    h(n,tcalc) - h(np,tcalc) =e= phi(n,np,'1')*q_pipe(n,np,tcalc) + phi(n,np,'2')*sqr(q_pipe(n,np,tcalc));
 
 *==============================================================================
-* MODELE 1 : Contrainte bilinéaire exacte (MINLP non-convexe)
+* MODELE 1 : Contrainte bilinéaire  (MINLP non-convexe)
 *==============================================================================
-* h(s,t) * x(k,t) = psi_0 * x(k,t) + psi_2 * q^2
 
 charge_source_eq("s",c,d,tcalc).. 
     h("s",tcalc)*x(c,d,tcalc) =e= psi(c,'0')*x(c,d,tcalc) + psi(c,'2')*sqr(q_pompe(c,d,tcalc));
@@ -182,11 +175,6 @@ charge_source_ineq_up("s",c,d,tcalc)..
     h("s",tcalc) =l= psi(c,'0') + (1 - x(c,d,tcalc))*1000;
 * Big-M : si x=0, h peut être quelconque ; si x=1, h <= psi_0
 
-
-*==============================================================================
-* DEFINITION DES 3 MODELES
-*==============================================================================
-
 Model pompe_MINLP "Modele 1: MINLP complet" /
     obj, conservation_debit, offre_demande, conso_pompe,
     limites_debit_sup, limites_debit_inf, debit_s, limite_debit_pipe,
@@ -206,12 +194,7 @@ Model pompe_ConvexRelax "Modele 3: Relaxation convexe" /
     charge_source_ineq_lo, charge_source_ineq_up
 /;
 
-
-*==============================================================================
-* OPTIONS ET RESOLUTION
-*==============================================================================
-
-Option optcr = 0.01;
+*Option optcr = 0.01;
 Option reslim = 300;
 
 * Résolution selon le choix
@@ -229,7 +212,7 @@ if(model_choice = 2,
 
 if(model_choice = 3,
     display "*** RESOLUTION MODELE 3: RELAXATION CONVEXE ***";
-    Option minlp = CPLEX;
+    Option minlp = DICOPT;
     solve pompe_ConvexRelax using minlp minimizing cost;
 );
 
