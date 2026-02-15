@@ -101,10 +101,16 @@ DICOPT (300s) &  9.9833 & 9.903047 & 300 \\
 \label{tab:runs_minlp}
 \end{table}
 
-Description BARON branch and bond et dicopt (peut etre parler de al seconde simu avec dicopt
-description CPLEX quis era utilisé par la suite
+Le premier solveur utilisé pour le MINLP complet, non convexe est BARON (pour Branch-And-Reduce Optimization Navigator), c'est un solveur global (donc il va trouver la meilleure solution). Pour cela il va procéder à une relaxation convexe puis utiliser une évolution de l'algorithme de branch and bound: le branch and reduce, qui partionne l'espace sur des variables bianires et continues !
+BARON garantit de trouver l'optimum global si on lui laisse assez de temps. Cependant, pour les problèmes non-convexes comme le nôtre, le gap entre la borne inférieure (relaxation) et la solution trouvée peut rester important même après un long calcul, car la relaxation convexe peut sous-estimer fortement le vrai coût.
 
-reste a faire le modele avec sans pression et l'autre avec relaxation, les lancer et tout lancer pour le plus gros reseau, puis rediger mettre les resultats et tout envoyer
+
+DICOPT, pour DIscrete and Continuous OPTimizer, utilise la méthode Outer Approximation (approximation d'une fonciton non linéaire à l'aide de ses tangentes) pour résoudre le MILNP. Il ne résout rien lui-même mais divise le problème et coordonne deux sous-solveurs : Un solveur NLP (CONOPT) et un solveur MIP (CPLEX). Pour faire ça l'algo procède par Itérations (résolution du NLP après relaxation continue -> linéarisation des contraintes non linéaires autour de la solution, ie création des tangentes -> résoudre le MIP pour fixer les entiers -> une fois les entiers fixés résoudre le NLP, ajouter une tangente -> répéter jusqu'à convergence).
+Mais DICOPT ne garantit qu'un optimum local, de plus l'OA marche moins bien pour des fonctions non convexes et la tangente peut alors exclure la solution.
+
+dicopt echoue ? reverif si entier ou relax, x.l
+
+reste verif le modele avec sans pression et l'autre avec relaxation, les lancer et tout lancer pour le plus gros reseau, puis rediger mettre les resultats et tout envoyer
 
 \subsection{Tableau}
 Pour le 4 tanks:

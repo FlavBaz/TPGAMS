@@ -1,4 +1,13 @@
-$Title Pump Scheduling CusNet
+$Title Pump Scheduling CusNet - 3 Modeles
+
+*==============================================================================
+* CHOIX DU MODELE (modifier ici)
+*==============================================================================
+* 1 = MINLP complet (non-convexe, utiliser BARON)
+* 2 = Sans pression (MIP lineaire, utiliser CPLEX)
+* 3 = Relaxation convexe (utiliser BARON ou DICOPT)
+*==============================================================================
+Scalar model_choice / 1 /;
 
 Sets 
      n          nodes / s, j39, j14, j16, j17, j19, j21, j24, j26, j27, j30, j2, j3, j6, j7, j10, r12, r13, r132, r133, r134, r14, r15, r151, r16, r161, r17, r171, r18, r181, r19, r191 /
@@ -6,6 +15,7 @@ Sets
      r(n)       reservoirs / r12, r13, r132, r133, r134, r14, r15, r151, r16, r161, r17, r171, r18, r181, r19, r191 /
      l(n,n)     pipes / s.j39, j39.j14, j14.r12, j14.j16, j16.j17, j17.r13, j17.j19, j19.r132, j19.j21, j21.r133, j21.r134, j16.j24, j24.r14, j24.j26, j26.j27, j27.r16, j27.r161, j26.j30, j30.r15, j30.r151, j39.j2, j2.j3, j3.r17, j3.r171, j2.j6, j6.j7, j7.r19, j7.r191, j6.j10, j10.r18, j10.r181 /
      t          1-hour periods / t1*t24 /
+     tcalc(t)   t pour le calcul / t1*t24 /
      night(t)   night periods / t1*t8 /      
      c          pump class / small, large /
      d          pump number / p1*p4 /
@@ -20,10 +30,23 @@ Scalar
      height0      reference height at the source (m)     / 0 /
      tariffnight  electricity hourly tariff at night (euro.kWh^-1) / 0.02916 /
      tariffday    electricity hourly tariff at day (euro.kWh^-1)   / 0.04609 /
+     Qmin_small   debit min pompes small (m3.h-1) / 10 /
+     Qmax_small   debit max pompes small (m3.h-1) / 350 /
+     Qmin_large   debit min pompes large (m3.h-1) / 10 /
+     Qmax_large   debit max pompes large (m3.h-1) / 600 /
+     Q_pipe_max   debit max dans les tuyaux (m3.h-1) / 1000 /;
 
 Parameter tariff(t)   electricity tariff;
     tariff(t)        = tariffday;
     tariff(night(t)) = tariffnight;
+
+Parameter Qmin(c) debit min par classe de pompe;
+    Qmin("small") = Qmin_small;
+    Qmin("large") = Qmin_large;
+
+Parameter Qmax(c) debit max par classe de pompe;
+    Qmax("small") = Qmax_small;
+    Qmax("large") = Qmax_large;
 
 Parameters
     height(n)   elevation at each node relative to s (m)
@@ -36,12 +59,11 @@ Parameters
                 / r12 106.5, r13 38.07, r132 231.43, r133 236.25, r134 444.0, r14 70.0, r15 188.0, r151 816.43, r16 112.0, r161 444.89, r17 215.47, r171 256.48, r18 185.17, r181 947.23, r19 1218.0, r191 1141.17 /
 
     vmax(r)  maximal volume of each reservoir (m^3)
-                / r12 177.5, r13 79.07, r132 366.43, r133 383.25, r134 592, r14 105, r15 282, r151 1045.43, r16 146, r161 535.89, r17 326.47, r171 485.48, r18 286.17, r181 1209.23, r19 1386.0, r191 1475.17 /
+                / r12 177.5, r13 79.07, r132 366.43, r133 383.25, r134 592, r14 105, r15 282, r151 1045.43, r16 146, r161 535.89, r17 326.47, r171 485.48, r18 286.17, r181 1209.23, r19 1386.0, r191 1475.17 /;
 
 Parameter vinit(r) initial volume of each reservoir;
     vinit(r) = vmin(r);
 
-* a polynomial is represented as the list of coefficients for each term degree
 Table psi(c,degree) quadratic fit of the service pressure (m) on the flow (m^3.h^-1) for each class of pumps
                   0            1            2
       small       152.3245     0            -0.0010392
@@ -69,7 +91,7 @@ r134 10.83  6.83   5.0    4.17   3.0    5.5   2.0     1.0     2.0    6.83  13.0 
 r161 47.33  53.0   51.83  28.0   25.0   26.67 21.67   16.67   4.0    42.67 60.0  63.0  110.83 84.33 93.0  67.0   73.0   69.0   56.0   64.0  89.5   99.0   95.83 67.0
 r13  0.83   1.5    1.17   1.5    1.83   1.83  1.0     1.0     0.0    3.5   2.0   3.0   4.0    3.0   3.0   3.0    2.0    3.0    2.0    2.0   4.0    3.0    3.0   3.0
 r171 10.0   18.17  13.0   7.83   4.67   11.0  6.0     6.0     7.5    18.0  39.0  38.0  40.0   35.0  33.0  20.0   23.83  31.0   23.0   17.33 26.67  34.83  21.5  24.0
-r17  25.17  26.33  10.83  12.0   12.17  15.0  13.0    14.0    5.67   16.33 42.67 46.0  56.67  50.67 46.0  40.0   34.0   31.0   30.0   33.0  36.0   48.17  45.0  38.0
+r17  25.17  26.33  10.83  12.0   12.17  15.0  13.0    14.0    5.67   16.33 42.67 46.0  56.67  50.67 46.0  40.0   34.0   31.0   30.0   33.0  36.0   48.17  45.0  38.0;
 
 Table phi(n,n,degree) quadratic fit of the pressure loss (m) on the flow (m^3.h^-1) for each pipe
                 2               1
@@ -81,7 +103,7 @@ Table phi(n,n,degree) quadratic fit of the pressure loss (m) on the flow (m^3.h^
      j17.r13    0.1099129       0.0930793
      j17.j19    0.0002801       0.0014965
      j19.r132   0.0006719       0.0025549
-     j19.j21    0.0005600	0.0029922
+     j19.j21    0.0005600       0.0029922
      j21.r133   0.0001541       0.0008234
      j21.r134   0.0003780       0.0020200
      j16.j24    0.0000006       0.0000042
@@ -104,3 +126,191 @@ Table phi(n,n,degree) quadratic fit of the pressure loss (m) on the flow (m^3.h^
      j6.j10     0.0003418       0.0024063
      j10.r18    0.0044362       0.0106558
      j10.r181   0.0003081       0.0016460;
+
+
+*==============================================================================
+* VARIABLES
+*==============================================================================
+
+Variables 
+    q_pipe(n,n,t)    debit dans le tuyau n.np en m3.h^-1
+    q_pompe(c,d,t)   debit dans la pompe k en m3.h^-1
+    p_pompe(c,d,t)   puissance electrique de la pompe k en kW
+    v(n,t)           volume eau dans le reservoir r(n) en m3
+    x(c,d,t)         variable binaire indiquant si la pompe k est en fonctionnement a instant t
+    h(n,t)           charge au niveau du noeud n a instant t (m)
+    cost             cout total electricite (euro);
+
+* Bornes sur les volumes
+v.up(r,t) = vmax(r);
+v.lo(r,t) = vmin(r);
+
+Positive variables q_pompe, p_pompe, q_pipe;
+Binary variable x;
+
+
+*==============================================================================
+* EQUATIONS COMMUNES (tous les modeles)
+*==============================================================================
+
+Equations
+    obj                           objectif cout total electricite
+    conservation_debit(n,t)       conservation de masse aux jonctions
+    offre_demande(r,t)            equilibre offre demande dans les reservoirs
+    conso_pompe(c,d,t)            puissance electrique des pompes
+    limites_debit_sup(c,d,t)      limite sup de debit dans les pompes
+    limites_debit_inf(c,d,t)      limite inf de debit dans les pompes
+    debit_s(t)                    debit a la source = somme des pompes
+    limite_debit_pipe(n,np,t)     limite de debit dans les tuyaux;
+
+*==============================================================================
+* EQUATIONS DE PRESSION (modeles 1 et 3 seulement)
+*==============================================================================
+
+Equations
+    hauteur_jonction(j,t)         charge minimale aux jonctions
+    hauteur_reservoir(r,t)        charge minimale aux reservoirs
+    perte_charge(n,np,t)          perte de charge dans les tuyaux;
+
+*==============================================================================
+* EQUATIONS SPECIFIQUES MODELE 1 : MINLP COMPLET (egalite bilineaire)
+*==============================================================================
+
+Equations
+    charge_source_eq(n,c,d,t)     charge source - egalite (MINLP complet);
+
+*==============================================================================
+* EQUATIONS SPECIFIQUES MODELE 3 : RELAXATION CONVEXE (inegalites)
+*==============================================================================
+
+Equations
+    charge_source_ineq_lo(n,c,d,t)   borne inferieure relaxee
+    charge_source_ineq_up(n,c,d,t)   borne superieure relaxee;
+
+
+*==============================================================================
+* DEFINITION DES EQUATIONS COMMUNES
+*==============================================================================
+
+obj..  cost =e= sum((k(c,d),tcalc), tariff(tcalc)*p_pompe(c,d,tcalc));
+
+conservation_debit(j,tcalc)..  
+    sum(n$(l(j,n)), q_pipe(j,n,tcalc)) =e= sum(n$(l(n,j)), q_pipe(n,j,tcalc));
+
+offre_demande(r,tcalc)..  
+    v(r,tcalc) - v(r,tcalc-1) - vinit(r)$(ord(tcalc)=1) =e= sum(n$l(n,r), q_pipe(n,r,tcalc)) - demand(r,tcalc);
+
+conso_pompe(k(c,d),tcalc)..  
+    p_pompe(c,d,tcalc) =g= gamma(c,"0") * x(c,d,tcalc) + gamma(c,"1") * q_pompe(c,d,tcalc);
+
+limites_debit_sup(k(c,d),tcalc)..  
+    q_pompe(c,d,tcalc) =l= x(c,d,tcalc) * Qmax(c);
+
+limites_debit_inf(k(c,d),tcalc)..  
+    q_pompe(c,d,tcalc) =g= x(c,d,tcalc) * Qmin(c);
+
+debit_s(tcalc)..  
+    sum(n$l("s",n), q_pipe("s",n,tcalc)) =e= sum(k(c,d), q_pompe(c,d,tcalc));
+
+limite_debit_pipe(l(n,np),tcalc)..  
+    q_pipe(n,np,tcalc) =l= Q_pipe_max;
+
+
+*==============================================================================
+* DEFINITION DES EQUATIONS DE PRESSION
+*==============================================================================
+
+hauteur_jonction(j,tcalc)..  
+    h(j,tcalc) =g= height(j);
+
+hauteur_reservoir(r,tcalc)..  
+    h(r,tcalc) =g= height(r) + v(r,tcalc)/surface(r);
+
+perte_charge(l(n,np),tcalc)..  
+    h(n,tcalc) - h(np,tcalc) =e= phi(n,np,'1')*q_pipe(n,np,tcalc) + phi(n,np,'2')*sqr(q_pipe(n,np,tcalc));
+
+
+*==============================================================================
+* MODELE 1 : Contrainte bilineaire exacte (MINLP non-convexe)
+*==============================================================================
+* h(s,t) * x(k,t) = psi_0 * x(k,t) + psi_2 * q^2
+* Cette contrainte couple la charge a la source avec l'etat des pompes
+
+charge_source_eq("s",k(c,d),tcalc).. 
+    h("s",tcalc) * x(c,d,tcalc) =e= psi(c,'0') * x(c,d,tcalc) + psi(c,'2') * sqr(q_pompe(c,d,tcalc));
+
+
+*==============================================================================
+* MODELE 3 : Relaxation convexe (inegalites)
+*==============================================================================
+* On remplace l'egalite par deux inegalites :
+*   h(s,t) * x(k,t) >= psi_0 * x(k,t) + psi_2 * q^2  (borne inf sur h*x)
+*   h(s,t) <= psi_0 + M*(1-x)                         (borne sup sur h quand x=1)
+*
+* Comme x est binaire :
+*   Si x=0 : contrainte satisfaite trivialement
+*   Si x=1 : h >= psi_0 + psi_2*q^2  et  h <= psi_0
+
+Scalar BigM / 1000 /;
+
+charge_source_ineq_lo("s",k(c,d),tcalc).. 
+    h("s",tcalc) * x(c,d,tcalc) =g= psi(c,'0') * x(c,d,tcalc) + psi(c,'2') * sqr(q_pompe(c,d,tcalc));
+
+charge_source_ineq_up("s",k(c,d),tcalc).. 
+    h("s",tcalc) =l= psi(c,'0') + BigM * (1 - x(c,d,tcalc));
+
+
+*==============================================================================
+* DEFINITION DES 3 MODELES
+*==============================================================================
+
+Model pompe_MINLP "Modele 1: MINLP complet (non-convexe)" /
+    obj, conservation_debit, offre_demande, conso_pompe,
+    limites_debit_sup, limites_debit_inf, debit_s, limite_debit_pipe,
+    hauteur_jonction, hauteur_reservoir, perte_charge,
+    charge_source_eq
+/;
+
+Model pompe_NoPressure "Modele 2: Sans contraintes de pression (MIP)" /
+    obj, conservation_debit, offre_demande, conso_pompe,
+    limites_debit_sup, limites_debit_inf, debit_s, limite_debit_pipe
+/;
+
+Model pompe_ConvexRelax "Modele 3: Relaxation convexe" /
+    obj, conservation_debit, offre_demande, conso_pompe,
+    limites_debit_sup, limites_debit_inf, debit_s, limite_debit_pipe,
+    hauteur_jonction, hauteur_reservoir, perte_charge,
+    charge_source_ineq_lo, charge_source_ineq_up
+/;
+
+
+*==============================================================================
+* OPTIONS ET RESOLUTION
+*==============================================================================
+
+Option optcr = 0.01;
+Option reslim = 400;
+
+* Resolution selon le choix du modele
+if(model_choice = 1,
+    display "=== RESOLUTION MODELE 1: MINLP COMPLET ===";
+    display "=== Solveur: BARON ===";
+    Option minlp = BARON;
+    solve pompe_MINLP using minlp minimizing cost;
+);
+
+if(model_choice = 2,
+    display "=== RESOLUTION MODELE 2: SANS PRESSION (MIP) ===";
+    display "=== Solveur: CPLEX ===";
+    Option mip = CPLEX;
+    solve pompe_NoPressure using mip minimizing cost;
+);
+
+if(model_choice = 3,
+    display "=== RESOLUTION MODELE 3: RELAXATION CONVEXE ===";
+    display "=== Solveur: BARON ===";
+    Option minlp = BARON;
+    solve pompe_ConvexRelax using minlp minimizing cost;
+);
+
+display cost.l, x.l, q_pompe.l, v.l;
