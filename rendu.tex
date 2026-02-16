@@ -42,7 +42,7 @@
 % Conservation des débits, équilibre offre-demande, limites de volume, contraintes de perte de charge (quadratiques), contraintes de gain de charge des pompes (bilinéaires $h \cdot x$).
 
 %==============================================================================
-\section{Modèles implémentés (a reverifier le tableau et ajouter ;e customernetwork, aussi les options ...)}
+\section{Modèles implémentés}
 %==============================================================================
 
 \begin{table}[h]
@@ -62,7 +62,7 @@ Relaxation convexe & Quadratique & Convexe & Mixte (binaires + continues) \\
 
 \textbf{MINLP complet :} Modèle avec toutes les contraintes hydrauliques, incluant les pertes de charge quadratiques et les contraintes bilinéaires $h(s,t) \cdot x(k,t)$ pour le gain de charge des pompes.
 
-\textbf{Sans pression :} Relaxation où les contraintes de charge hydraulique sont supprimées. Seules restent les contraintes de conservation de débit et d'équilibre des réservoirs.
+\textbf{Sans pression :} Relaxation où les contraintes de charge hydraulique sont supprimées.
 
 \textbf{Relaxation convexe :} Les contraintes non-convexes (égalités bilinéaires) sont remplacées par des inégalités convexes.
 
@@ -80,37 +80,44 @@ Les résultats obtenus sur ces 2 runs sont dans le tableau ci-dessous.
 
 
 
-Essayons maintenant avec DICOPT, en limitant à 300s pour comparer avec la référence, on obtient:
-
+Essayons ensuite avec DICOPT, on obtient:
 
 \begin{table}[h]
 \centering
-\begin{tabular}{@{}lccccc@{}}
+\begin{tabular}{@{}lcccc@{}}
 \toprule
-\textbf{Run} & \textbf{Coût (€)} & \textbf{Borne inf. (€)} & \textbf{Temps (s)}  \\
+\textbf{Run} & \textbf{Coût (€)} & \textbf{Borne inf. (€)} & \textbf{Temps (s)} & \textbf{Remarque} \\
 \midrule
-BARON (8h)   & 11.0006 & 9.8446 &  28\,902 \\
-BARON (300s) & 11.4363 & 9.8446       & 300     \\
-DICOPT (300s) &  9.9833 & 9.903047 & 300 \\
-
+BARON (8h) & 11.0006 & 9.8446 & 28\,902 & Solution MINLP valide \\
+BARON (300s) & 11.4363 & 9.8446 & 300 & Solution MINLP valide \\
+DICOPT (300s) & 9.9833* & 9.9030* & 300 & *MIP linéarisé uniquement \\
+DICOPT (8h) & 9.9833* & 9.9197* & 28\,930 & *MIP linéarisé uniquement \\
 \midrule
-\textit{Référence} & \textit{11.28} & -- &  \textit{300}  \\
+\textit{Référence} & \textit{11.28} & -- & \textit{300} & -- \\
 \bottomrule
 \end{tabular}
-\caption{Résultats des trois exécutions BARON sur le modèle MINLP complet}
+\caption{Résultats BARON/DICOPT. *Les valeurs DICOPT correspondent au MIP linéarisé et ne sont pas des solutions réalisables du MINLP.}
 \label{tab:runs_minlp}
 \end{table}
 
-Le premier solveur utilisé pour le MINLP complet, non convexe est BARON (pour Branch-And-Reduce Optimization Navigator), c'est un solveur global (donc il va trouver la meilleure solution). Pour cela il va procéder à une relaxation convexe puis utiliser une évolution de l'algorithme de branch and bound: le branch and reduce, qui partionne l'espace sur des variables bianires et continues !
-BARON garantit de trouver l'optimum global si on lui laisse assez de temps. Cependant, pour les problèmes non-convexes comme le nôtre, le gap entre la borne inférieure (relaxation) et la solution trouvée peut rester important même après un long calcul, car la relaxation convexe peut sous-estimer fortement le vrai coût.
+Qui sont les solveurs utilisés ?
+Le premier est BARON (pour Branch-And-Reduce Optimization Navigator), c'est un solveur global (donc il va trouver la meilleure solution). Pour cela il va procéder à une relaxation convexe puis utiliser une évolution de l'algorithme de branch and bound: le branch and reduce, qui partionne l'espace sur des variables bianires et continues !
+BARON garantit de trouver l'optimum global si on lui laisse assez de temps. 
 
-
-DICOPT, pour DIscrete and Continuous OPTimizer, utilise la méthode Outer Approximation (approximation d'une fonciton non linéaire à l'aide de ses tangentes) pour résoudre le MILNP. Il ne résout rien lui-même mais divise le problème et coordonne deux sous-solveurs : Un solveur NLP (CONOPT) et un solveur MIP (CPLEX). Pour faire ça l'algo procède par Itérations (résolution du NLP après relaxation continue -> linéarisation des contraintes non linéaires autour de la solution, ie création des tangentes -> résoudre le MIP pour fixer les entiers -> une fois les entiers fixés résoudre le NLP, ajouter une tangente -> répéter jusqu'à convergence).
+Ensuite on a DICOPT, pour DIscrete and Continuous OPTimizer, utilise la méthode Outer Approximation (approximation d'une fonciton non linéaire à l'aide de ses tangentes) pour résoudre le MILNP. Il ne résout rien lui-même mais divise le problème et coordonne deux sous-solveurs : Un solveur NLP (CONOPT) et un solveur MIP (CPLEX). Pour faire ça l'algo procède par Itérations (résolution du NLP après relaxation continue -> linéarisation des contraintes non linéaires autour de la solution, ie création des tangentes -> résoudre le MIP pour fixer les entiers -> une fois les entiers fixés résoudre le NLP, ajouter une tangente -> répéter jusqu'à convergence).
 Mais DICOPT ne garantit qu'un optimum local, de plus l'OA marche moins bien pour des fonctions non convexes et la tangente peut alors exclure la solution.
 
-dicopt echoue ? reverif si entier ou relax, x.l
+Les résultats obtenus avec BARON confirment la validité du modèle MINLP. Avec un temps de calcul de 8 heures, BARON atteint une solution à 11.0006€. Le run limité à 300 secondes trouve une solution à 11.4363€, ce qui reste acceptable. La différence entre ces deux runs illustre l'importance du temps alloué pour les problèmes MINLP non-convexes : BARON améliore progressivement sa solution au fil des itérations du Branch-and-Reduce.
+On observe que la borne inférieure de BARON (9.8446€) reste significativement éloignée de la solution trouvée. Ce phénomène est caractéristique des problèmes non-convexes : la relaxation convexe sous-estime le vrai coût car elle autorise des solutions qui ne respectent pas exactement les contraintes bilinéaires. Fermer ce gap nécessiterait un temps de calcul très important au vu de la lenteur de montée de la borne inf.
 
-reste verif le modele avec sans pression et l'autre avec relaxation, les lancer et tout lancer pour le plus gros reseau, puis rediger mettre les resultats et tout envoyer
+Les résultats DICOPT nécessitent une interprétation plus prudente. Contrairement à BARON, DICOPT n'utilise pas de Branch-and-Bound sur le MINLP et ne produit donc pas de bornes supérieure/inférieure au sens classique. Comme on l'a vu, il procède par Outer Approximation : les contraintes non-linéaires sont linéarisées autour de points de fonctionnement successifs, puis le MIP résultant est résolu par CPLEX.
+
+Dans notre cas, DICOPT n'a jamais complété une seule itération de l'algorithme. La résolution du MIP linéarisé par CPLEX a consommé la totalité du temps de calcul (  Cplex Time: 28930.89sec ) sans atteindre l'optimalité. Les valeurs 9.9833€ et 9.9197€ reportées dans le tableau correspondent donc aux bornes du MIP linéarisé, pas du MINLP original.
+
+Pour ce problème MINLP non-convexe avec contraintes bilinéaires, BARON s'avère le solveur approprié. DICOPT ne fournit pas de solutions exploitables.
+
+revoir le 2 et 3, meme resultats et trop bas pour le 3
+4 pas de resultats ?
 
 \subsection{Tableau}
 Pour le 4 tanks:
@@ -118,56 +125,19 @@ Pour le 4 tanks:
 \centering
 \begin{tabular}{@{}lcccccc@{}}
 \toprule
-\textbf{Modèle} & \textbf{Solveur} & \textbf{Coût (€)} & \textbf{Borne inf.} & \textbf{Gap (\%)} & \textbf{Temps (s)} & \textbf{Itérations} \\
+\textbf{Modèle} & \textbf{Solveur} & \textbf{Coût (€)} & \textbf{Borne inf.}  & \textbf{Temps (s)} \\
 \midrule
-MINLP complet & DICOPT & -- & 8.59 & -- & >9h & Échec mémoire \\
-MINLP complet & BARON & \textcolor{blue}{À compléter} & & & & \\
-Sans pression & CPLEX & \textcolor{blue}{À compléter} & & & & \\
-Relax. convexe & DICOPT & \textcolor{blue}{À compléter} & & & & \\
+MINLP complet & BARON & 11.44 & 9.8446 & 300 \\
+Sans pression & CPLEX & 7.37 & &  /~2s \\
+Relax. convexe & BARON & \textcolor{blue}{À compléter} & &  \\
 \midrule
-\multicolumn{2}{@{}l}{\textit{Référence (sujet)}} & 11.28 / 9.73 / 10.99 & -- & -- & 300 / 30 / 60 & -- \\
+\multicolumn{2}{@{}l}{\textit{Référence (sujet)}} & 11.28 / 9.73 / 10.99 & -- &  300 / 30 / 60 \\
 \bottomrule
 \end{tabular}
 \caption{Résultats obtenus pour le réseau 4 Tanks}
 \label{tab:resultats}
 \end{table}
 
-Pour le customer network
-
-%==============================================================================
-\section{Analyse et discussion}
-%==============================================================================
-
-\subsection{Difficultés rencontrées}
-
-Le modèle MINLP complet présente des contraintes bilinéaires de la forme $h(s,t) \cdot x(k,t)$ qui rendent le problème fortement non-convexe. Avec DICOPT/CPLEX, le solveur MIP a exploré plus de 350 millions de nœuds avant d'épuiser la mémoire disponible.
-
-\textcolor{blue}{[À compléter : autres difficultés rencontrées]}
-
-\subsection{Comparaison des modèles}
-
-\textcolor{blue}{[À compléter : comparer les coûts obtenus, qualité des solutions, temps de calcul]}
-
-La relaxation ``sans pression'' donne une borne inférieure sur le coût optimal mais la solution n'est pas nécessairement réalisable hydrauliquement. La relaxation convexe offre un bon compromis entre qualité de solution et temps de calcul.
-
-\subsection{Pistes d'amélioration}
-
-\begin{itemize}[noitemsep]
-    \item Utiliser des coupes de McCormick pour linéariser les termes bilinéaires
-    \item Tester des solveurs globaux (BARON, SCIP) avec des options de prétraitement
-    \item Implémenter une heuristique de réparation à partir de la solution relaxée
-    \item Réduire la symétrie entre les pompes identiques (contraintes de symétrie-breaking)
-\end{itemize}
-
-%==============================================================================
-\section*{Conclusion}
-%==============================================================================
-
-\textcolor{blue}{[À compléter : résumer les principaux résultats et conclusions]}
-
-%==============================================================================
-\begin{thebibliography}{9}
-\bibitem{bonvin2017} G. Bonvin, S. Demassey, C. Le Pape, V. Mazauric, N. Maïzi, A. Samperio (2017). A convex mathematical program for pump scheduling in a class of branched water networks, \textit{Applied Energy}, 185(2), 1702-1711.
-\end{thebibliography}
+Pour le customer network :
 
 \end{document}
