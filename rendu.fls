@@ -1,9 +1,9 @@
-PWD /mnt/c/Users/flavb/Desktop/code mastere ose/Opti_NLNE/optim tpgams/TPGAMS
+PWD /mnt/c/Users/flavb/Desktop/code mastere ose/Opti_NLNE/TPGAMS
 INPUT /etc/texmf/web2c/texmf.cnf
 INPUT /usr/share/texmf/web2c/texmf.cnf
 INPUT /usr/share/texlive/texmf-dist/web2c/texmf.cnf
 INPUT /var/lib/texmf/web2c/pdftex/pdflatex.fmt
-INPUT /home/flavien/Desktop_Windows/code mastere ose/Opti_NLNE/optim tpgams/TPGAMS/rendu.tex
+INPUT /home/flavien/Desktop_Windows/code mastere ose/Opti_NLNE/TPGAMS/rendu.tex
 OUTPUT rendu.log
 INPUT /usr/share/texlive/texmf-dist/tex/latex/base/article.cls
 INPUT /usr/share/texlive/texmf-dist/tex/latex/base/article.cls
@@ -192,9 +192,11 @@ INPUT /usr/share/texlive/texmf-dist/fonts/tfm/jknappen/ec/ecbx1200.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/jknappen/ec/tcbx1095.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/jknappen/ec/ecti1095.tfm
 INPUT /var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map
+INPUT /usr/share/texlive/texmf-dist/fonts/tfm/jknappen/ec/tcrm1095.tfm
 INPUT rendu.aux
 INPUT ./rendu.out
 INPUT ./rendu.out
+INPUT /home/flavien/.texlive2023/texmf-var/fonts/pk/ljfour/jknappen/ec/tcrm1095.600pk
 INPUT /home/flavien/.texlive2023/texmf-var/fonts/pk/ljfour/jknappen/ec/ecti1095.600pk
 INPUT /home/flavien/.texlive2023/texmf-var/fonts/pk/ljfour/jknappen/ec/tcbx1095.600pk
 INPUT /home/flavien/.texlive2023/texmf-var/fonts/pk/ljfour/jknappen/ec/ecbx1200.600pk

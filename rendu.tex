@@ -129,7 +129,7 @@ Pour le 4 tanks:
 \midrule
 MINLP complet & BARON & 11.44 & 9.8446 & 300 \\
 Sans pression & CPLEX & 7.37 & &  /~2s \\
-Relax. convexe & BARON & \textcolor{blue}{À compléter} & &  \\
+Relax. convexe & DICOPT &  7.60 & &  \\
 \midrule
 \multicolumn{2}{@{}l}{\textit{Référence (sujet)}} & 11.28 / 9.73 / 10.99 & -- &  300 / 30 / 60 \\
 \bottomrule
@@ -139,5 +139,22 @@ Relax. convexe & BARON & \textcolor{blue}{À compléter} & &  \\
 \end{table}
 
 Pour le customer network :
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+\textbf{Modèle} & \textbf{Solveur} & \textbf{Coût (€)} & \textbf{Borne inf.}  & \textbf{Temps (s)} \\
+\midrule
+MINLP complet & BARON & Pas de solution en 400s &  & 400 \\
+Sans pression & CPLEX & 7.37 & &  /~2s \\
+Relax. convexe & DICOPT &  7.60 & &  \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Référence (sujet)}} & 11.28 / 9.73 / 10.99 & -- &  300 / 30 / 60 \\
+\bottomrule
+\end{tabular}
+\caption{Résultats obtenus pour le réseau 4 Tanks}
+\label{tab:resultats}
+\end{table}
 
 \end{document}
