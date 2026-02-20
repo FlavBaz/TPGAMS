@@ -272,7 +272,7 @@ Model pompe_ConvexRelax "Modele 3: Relaxation convexe" /
 
 
 *Option optcr = 0.01;
-Option reslim = 400;
+*Option reslim = 400;
 
 * Resolution selon le choix du modele
 if(model_choice = 1,

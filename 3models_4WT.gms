@@ -212,7 +212,7 @@ if(model_choice = 2,
 
 if(model_choice = 3,
     display "*** RESOLUTION MODELE 3: RELAXATION CONVEXE ***";
-    Option minlp = DICOPT;
+    Option minlp = BARON;
     solve pompe_ConvexRelax using minlp minimizing cost;
 );
 

@@ -15,9 +15,9 @@
 \setlength{\parskip}{0.5em}
 
 \title{\textbf{Planification du pompage dans un réseau d'eau potable}\\
-\large Projet d'optimisation MINLP -- Réseau 4 Tanks}
+\large Projet d'optimisation MINLP}
 \author{Flavien BAZON}
-\date{\today}
+
 
 \begin{document}
 \maketitle
@@ -116,20 +116,18 @@ Dans notre cas, DICOPT n'a jamais complété une seule itération de l'algorithm
 
 Pour ce problème MINLP non-convexe avec contraintes bilinéaires, BARON s'avère le solveur approprié. DICOPT ne fournit pas de solutions exploitables.
 
-revoir le 2 et 3, meme resultats et trop bas pour le 3
-4 pas de resultats ?
-
 \subsection{Tableau}
 Pour le 4 tanks:
 \begin{table}[h]
 \centering
 \begin{tabular}{@{}lcccccc@{}}
 \toprule
-\textbf{Modèle} & \textbf{Solveur} & \textbf{Coût (€)} & \textbf{Borne inf.}  & \textbf{Temps (s)} \\
+\textbf{Modèle} & \textbf{Solveur} & \textbf{Coût } & \textbf{Borne inf.}  & \textbf{Temps (s)} \\
 \midrule
 MINLP complet & BARON & 11.44 & 9.8446 & 300 \\
 Sans pression & CPLEX & 7.37 & &  /~2s \\
 Relax. convexe & DICOPT &  7.60 & &  \\
+Relax. convexe & BARON  &  7.37 & &  \\
 \midrule
 \multicolumn{2}{@{}l}{\textit{Référence (sujet)}} & 11.28 / 9.73 / 10.99 & -- &  300 / 30 / 60 \\
 \bottomrule
@@ -138,22 +136,24 @@ Relax. convexe & DICOPT &  7.60 & &  \\
 \label{tab:resultats}
 \end{table}
 
+Même résulat pour CPLEX sans Pression et BARON relaxation convexe, résulat différent avec DICOPT relaxation convexe, il y a probablement une erreur, mais j'ai pas le temps de la chercher pour le moment.
+
 Pour le customer network :
 
 \begin{table}[h]
 \centering
 \begin{tabular}{@{}lcccccc@{}}
 \toprule
-\textbf{Modèle} & \textbf{Solveur} & \textbf{Coût (€)} & \textbf{Borne inf.}  & \textbf{Temps (s)} \\
+\textbf{Modèle} & \textbf{Solveur} & \textbf{Borne inf (€)} & \textbf{Borne supp.}  & \textbf{Temps (s)} \\
 \midrule
-MINLP complet & BARON & Pas de solution en 400s &  & 400 \\
-Sans pression & CPLEX & 7.37 & &  /~2s \\
-Relax. convexe & DICOPT &  7.60 & &  \\
+MINLP complet & BARON & 256 & 315 & Pas de solution en temps raisonnable \\
+Sans pression & CPLEX & 188 & &  /~2s \\
+Relax. convexe & DICOPT &  188 & 190 & Pas de solution en temps raisonnable  \\
 \midrule
-\multicolumn{2}{@{}l}{\textit{Référence (sujet)}} & 11.28 / 9.73 / 10.99 & -- &  300 / 30 / 60 \\
+\multicolumn{2}{@{}l}{\textit{Référence (sujet)}} & 235.94 / 218.85 / 235.45 & -- &  400 / 30 / 60 \\
 \bottomrule
 \end{tabular}
-\caption{Résultats obtenus pour le réseau 4 Tanks}
+\caption{Résultats obtenus pour le customer network}
 \label{tab:resultats}
 \end{table}
 
